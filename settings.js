@@ -1,9 +1,11 @@
 // Epg server (Siol internal network)
 EPG_SERVER = 'http://10.253.3.129/EpgThales/FetchEpg.aspx';
 
+TIME_OFFSET = 7200; // Siol: zimski cas: 3600, poletni 7200
+
 // dimensions =============================
 // Maximum number of items in a channel selection table.
-var gnMaxChanItems = 9;
+gnMaxChanItems = 9;
 // Group table width (0-100)[%]
 gnGroupBoxWidth = 30;
 // Banner width (0-100)[%]

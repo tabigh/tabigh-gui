@@ -786,7 +786,7 @@ function sagemSetDisplay(sDisp)
 function sagemSetDateTime()
 {
     if (typeof(sagem) != 'undefined')
- 		sagem.Set('TIME', 'TIME_OFFSET', 3600);	// Time is set via ntp, just correct the offset.
+ 		sagem.Set('TIME', 'TIME_OFFSET', TIME_OFFSET);	// Time is set via ntp, just correct the offset.
 }
 
 function sagemJoinMulticast(sIpPort)
