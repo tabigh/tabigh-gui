@@ -161,6 +161,7 @@ KEY_TV=0x40000097;
 
 function init()
 {
+    sagemSetDateTime();
     sagemSetLoadingPictTime();
 	sagemSetDimming();
 	sagemKillMedia();
