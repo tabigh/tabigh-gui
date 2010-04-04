@@ -120,7 +120,7 @@ function loadPlaylist()
 	sTempFrame.document.close();	
 }
 
-//Fixme: Not linear relationship.
+//Fixme
 function maxWordCount()
 {
      var nBodyWidth = 720-(2*gnMarginLeft);
