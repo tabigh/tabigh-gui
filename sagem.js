@@ -1,7 +1,20 @@
-﻿// Browser AntFresco 4.x : XMLHttpRequest not supported, JS 1.3, CSS 1.0, DOM level 0( No InnerHtml...)
-// Body height: 576px (HD resolutions also).
-// Main overlay frame consist of two iframes: Upper 0-400px, Lower 400-576px.
+﻿// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+// Notes:
+// Browser AntFresco 4.x : XMLHttpRequest not supported, JS 1.3, CSS 1.0, DOM level 0( No InnerHtml...)
+// Body height: 576px (HD resolutions also).
+// Main overlay frame consist of two table cells: Upper 0-400px, Lower 400-576px.
 // channelInfo array (PHP): 
 //[0=index(number), 1=name, 2=number, 3=ip, 4=port, 5=group, 6=language 7=epg, 8=locked] 
 
@@ -20,16 +33,6 @@ var gbGroupBoxVisible = false;
 var gbNumInputVisible = false;
 var gbOsdBannerVisible = false;
 
-// numpad input
-var gsNumpad = '';
-
-// Current playing show name (groupbox not visible) or selected item show name (groupbox visible)
-var gsCurrentShow='';
-var gsCurrentShowDesc='';
-var gsNextShow='';
-var gsNextShowDesc='';
-var gsCurrentProgress='0';
-
 // timers
 var gnTmGroupBoxHide = 0;
 var gnTmOsdBannerHide = 0;
@@ -38,89 +41,6 @@ var gnTmNumpad = 0;
 gnEpgDownloadInterval = 5 * 60 * 1000; // Download epg on every 5 minutes.
 
 var gbLoading = true;
-
-// conversions
-gsGroupBoxAlpha = alphaToHex(gnGroupBoxAlpha);
-gsOsdBannerHeaderAlpha = alphaToHex(gnOsdBannerHeaderAlpha); 
-gsOsdBannerEpgAlpha = alphaToHex(gnOsdBannerEpgAlpha); 
-
-// text metrics
-gnGrpBoxFontFactor = 11.41;
-gnGrpBoxMaxWords= 0;
-gnOsdBanFontFactor = 10.0;
-gnOsdBanEpgMaxWords= 0;
-gn_GrpBoxRow0Width = Math.floor(40*gnGroupBoxFontSize/100);
-
-//css
-gsHeaderCommon = '<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" /><style type=\"text/css\">';
-
-gsMainFrameHeaderUp = gsHeaderCommon +
-				    'BODY {font-family:Arial; background-color: transparent; }'+
-				    '.chn_table{'+
-					'  background-color: '+gsGropBoxBackgroundColor+gsGroupBoxAlpha+';'+
-					'  table-layout:fixed;'+
-					'  font-size: '+gnGroupBoxFontSize+'%;'+
-					'  font-weight:bold;'+
-					'  width:'+gnGroupBoxWidth+'%;}'+
-					'.chn_table_header_left{}'+
-				    '.chn_table_header_right{'+
-					'  color: '+gsGroupBoxHeaderColor+';'+
-					'  text-align: left;}'+
-				    '.chn_table_row_left{'+
-					'  color: '+gsGroupBoxLeftColor+';}'+
-					'.chn_table_row_left_sel{'+
-					'  color: '+gsGroupBoxLeftColor+';'+
-					'  background-color: '+gsGroubBoxSelectorColor+';}'+
-					'.chn_table_row_right{'+
-					'  color: '+gsGroupBoxRightColor+';}'+
-					'.chn_table_row_right_sel{'+
-					'  color: '+gsGroupBoxRightColor+';'+
-					'  background-color: '+gsGroubBoxSelectorColor+';}'+
-					'  </style></head>'+
-					'<body onKeypress=\"javascript:return window.top.keyAction(event);\" leftmargin='+gnMarginLeft+'px topmargin='+gnMarginTop+'px >';
-					
-gsMainFrameHeaderDown = gsHeaderCommon +
-				    'BODY {font-family:Arial; background-color: transparent; } '+
-					'.osd_table{'+
-					'  border-width:0px;'+
-					'  font-size:'+gnOsdBannerFontSize+'%;'+
-					'  width:'+gnOsdBannerWidth +'%;'+
-					'  table-layout:fixed;}'+
-					'.r0c0{'+
-					'  color: '+gsOsdBannerNumColor+';'+
-					'  background-color: '+gsOsdBannerHeadBackColor+gsOsdBannerHeaderAlpha+';'+
-					'  font-weight:bolder;}'+
-					'.r0c1{'+
-					'  color: '+gsOsdBannerNameColor+';'+
-					'  background-color: '+gsOsdBannerHeadBackColor+gsOsdBannerHeaderAlpha+';'+
-					'  font-weight:bolder;}'+
-					'.r0c2{'+
-					'  color: '+gsOsdBannerClockColor+';'+
-					'  background-color: '+gsOsdBannerHeadBackColor+gsOsdBannerHeaderAlpha+';'+
-					'  font-weight:bolder;'+
-					'  text-align: right;}'+
-					'.r13c01{'+
-					'  color: '+gsOsdBannerEpgColor+';'+
-					'  background-color: '+gsOsdBannerEpgBackColor+gsOsdBannerEpgAlpha+';'+
-					'  font-weight:bold;}'+
-					'.r2c01{background-color: transparent; font-size: 4px; }'+
-					'.desc{font-weight:normal;'+
-					'  color: '+gsOsdBannerEpgDescColor+';}'+
-				   	'  </style></head><body onKeypress=\"javascript:return window.top.keyAction(event);\" leftmargin='+gnMarginLeft+'px rightmargin='+gnMarginLeft+'px >';
-
-					
-gsMainFrameFooter = '</body></html>';
-
-gsNumInputHeader = gsHeaderCommon +
-					'.numpad{ '+
-                    '  color:'+gsnumericInputColor+';'+
-                    '  background-color: '+gsNumericInputBackColor+';'+
-					'  font-family:Arial;'+
-					'  font-size: 160%;'+
-					'  font-weight: bold ;}'+
-					'  </style></head><body onKeypress=\"javascript:return window.top.keyAction(event);\" leftmargin='+gnMarginLeft+ 'px topmargin='+gnMarginTop+'px >';
-					
-gsNumInputFooter =  gsMainFrameFooter;
 
 // keys 
 KEY_0=536870922;
@@ -261,91 +181,6 @@ function resetGroupFiltering()
 	gaPlaylistFiltered = gaPlaylist;
 }
 
-function drawNumInput()
-{
-	return gsNumInputHeader + '<table width="64px" class=\"numpad\"><tr><td>'+ gsNumpad +'</td></tr></table>' + gsNumInputFooter;
-}
-
-// Draw channel selection table.
-function drawChanSelTable()
-{
-    var sCurrentGroupName = '';
-	if (gnCurrentItemGroup == -1)
-	    sCurrentGroupName = 'Vsi';
-	else
-	    sCurrentGroupName = gaGroups[gnCurrentItemGroup][1];
-	
-	var nSelectorIndex = 0;
-	var nItemStart = 0;
-	var nFilteredPlaylistLength = gaPlaylistFiltered.length;
-	var nItems = Math.min(gnMaxChanItems, nFilteredPlaylistLength);
-	var nMiddleIndex = Math.floor(nItems/2);
-    
-	if (gnCurrentItemIndex < nMiddleIndex){
-	    nItemStart = 0;
-		nSelectorIndex = gnCurrentItemIndex;
-	}
-	else if (gnCurrentItemIndex >= nFilteredPlaylistLength-nMiddleIndex){
-	    nItemStart = nFilteredPlaylistLength-nItems;
-		nSelectorIndex = nItems - (nFilteredPlaylistLength-gnCurrentItemIndex);
-	}
-	else{
-	    nItemStart = gnCurrentItemIndex - nMiddleIndex;
-		nSelectorIndex = nMiddleIndex;
-	}
-	
-	 var sTableHeader = '<table cellspacing=\"0\" class=\"chn_table\"><tr>' +
-				          '<th width = \"'+gn_GrpBoxRow0Width+'px\" class=\"chn_table_header_left\"></th>'+
-				          '<th class=\"chn_table_header_right\">' + sCurrentGroupName + '</th></tr>';
-	var sTableBody = '';
-	var sTableEnd = '</table>';
-    for	(var i=0; i<nItems; i++){
-	    var sRowCssLeft = 'chn_table_row_left';
-		var sRowCssRight = 'chn_table_row_right';
-		if (i==nSelectorIndex){
-		    sRowCssLeft = 'chn_table_row_left_sel';
-			sRowCssRight = 'chn_table_row_right_sel';
-		}
-        		
-	    sTableBody +=  '<tr><td class=\"' + sRowCssLeft + '\" >' + gaPlaylistFiltered[i+nItemStart][2] +'</td>'+
-					   '<td class=\"' + sRowCssRight + '\" >' + gaPlaylistFiltered[i+nItemStart][1].trunc(gnGrpBoxMaxWords) + '</td></tr>';
-	}
-
-	return  sTableHeader + sTableBody + sTableEnd ;
-}
-
-function drawOsdBanner()
-{
-    var sTable = '<table align="center" class="osd_table" ><tr>'+
-				 '<td width = \"55px\" class="r0c0">'+gaPlaylistFiltered[gnCurrentItemIndex][2]+'</td>'+
-				 '<td class="r0c1">'+gaPlaylistFiltered[gnCurrentItemIndex][1]+'</td>'+
-				 '<td width = \"55px\" class="r0c2">'+formatTime(getRTC())+'</td></tr><tr>';
-
-	if (gsCurrentShow!=''){
-	    sCurShow = gsCurrentShow;
-		nCurShowLen = sCurShow.length;
-		sCurShowDesc =gsCurrentShowDesc;
-		sNextShow = gsNextShow;
-		nNextShowLen = gsNextShow.length;
-		sNextShowDesc = gsNextShowDesc;
-		if (nCurShowLen + sCurShowDesc.length > gnOsdBanEpgMaxWords){
-		    sCurShow = gsCurrentShow.trunc(gnOsdBanEpgMaxWords);
-			sCurShowDesc = gsCurrentShowDesc.trunc(Math.max(0,gnOsdBanEpgMaxWords-nCurShowLen));
-		}
-		if (nNextShowLen + sNextShowDesc.length > gnOsdBanEpgMaxWords){
-		    sNextShow = gsNextShow.trunc(gnOsdBanEpgMaxWords);
-			sNextShowDesc = gsNextShowDesc.trunc(Math.max(0,gnOsdBanEpgMaxWords - nNextShowLen ));
-		}
-		sTable+='<td class="r13c01" colspan="3">'+sCurShow+'<span class="desc"> '+sCurShowDesc+'</span></td></tr><tr>'+
-				'<td class="r2c01" colspan="3"><img src="progress.gif" width='+ gsCurrentProgress +'% height=4px></td></tr><tr>'+
-				'<td class="r13c01" colspan="3">'+sNextShow+'<span class="desc"> '+sNextShowDesc+'</span></td></tr></table>';
-	}
-	else
-	    sTable += '</table>';
-	
-	return sTable;
-}
-
 function displayGroupBox(bDisplay, bRefresh)
 {
     if (bRefresh === undefined)
@@ -402,35 +237,30 @@ function displayNumpadInput(b)
 // Refresh screen
 function drawMainFrame()
 {
-    var sHtmlUp = '';
-	var sTempFrameUp = window.top.mainFrameUp;
+    var sHtmlUp = ''
+	var sTempFrame = window.top.mainFrame;
 	var sHtmlDown = '';
-	var sTempFrameDown = window.top.mainFrameDown;
 	
     //Upper:
-	sHtmlUp += gsMainFrameHeaderUp;
+	sHtmlUp += gsMainFrameHeader;
+	sHtmlUp += '<table width=\"100%\" cellspacing=\"0\" ><tr><td valign=\"top\" height=400px>';
 	if (gbNumInputVisible)
 	    sHtmlUp += drawNumInput() 
 	else if (gbGroupBoxVisible)
 		sHtmlUp +=  drawChanSelTable();
-	sHtmlUp += gsMainFrameFooter; 
-	
-	sTempFrameUp.document.open();
-	sTempFrameUp.document.write(sHtmlUp);
-	sTempFrameUp.document.close();
 
 	//Lower:
-	sHtmlDown += gsMainFrameHeaderDown;
+	sHtmlDown += '</td></tr><tr><td valign=\"top\" >';
 	if (gbOsdBannerVisible){
 	    getCurrentEpg(); 
 		sHtmlDown += drawOsdBanner() ;
 	}
+	sHtmlDown += '</td></tr></table>';
     sHtmlDown += gsMainFrameFooter;
 
-	sTempFrameDown.document.open();
-	sTempFrameDown.document.write(sHtmlDown);
-	sTempFrameDown.document.close();
-	
+	sTempFrame.document.open();
+	sTempFrame.document.write(sHtmlUp+sHtmlDown);
+	sTempFrame.document.close();
 }
 
 function clearMainFrame()
@@ -753,71 +583,6 @@ function formatTime(dt)
 }
 
 //==================================================
-// Hardware functions ==============================
-
-function sagemSetLoadingPictTime()
-{
-	if (typeof(sagem) != 'undefined')
-	{
-		if (sagem.Get('STB', 'CONFIG', 'LOADINGPICTURE_TIME') != 7)
-			sagem.Set('STB', 'CONFIG', 'LOADINGPICTURE_TIME', 7, 'SAVE');
-	}	
-}
-
-function sagemSetDimming()
-{
-    if (typeof(sagem) != 'undefined')
-		sagem.Set('STB', 'FRONTPANEL', 'DIMMING', 'MEDIUM')
-}
-
-function sagemSetDisplay(sDisp)
-{
-    if (typeof(sagem) != 'undefined')
-	{
-		sagem.Set('STB', 'FRONTPANEL', 'OPEN' );
-       if (sDisp.length < 3)
-    	   sDisp = ' ' + sDisp;
-       if (sDisp.length < 3)
-    	   sDisp = ' ' + sDisp;
-       if (typeof(sagem) != 'undefined')
-	       sagem.Set('STB', 'FRONTPANEL', 'DISPLAY', sDisp );
-	}
-}
-
-function sagemSetDateTime()
-{
-    if (typeof(sagem) != 'undefined')
- 		sagem.Set('TIME', 'TIME_OFFSET', TIME_OFFSET);	// Time is set via ntp, just correct the offset.
-}
-
-function sagemJoinMulticast(sIpPort)
-{
-    if (typeof(sagem) != 'undefined')
-        document.location.href = 'tv://multicast.' + sIpPort ;
-}
-
-function sagemLeaveMulticast()
-{
-    if (typeof(sagem) != 'undefined')
-        document.location.href = 'tv://##stop';
-}
-
-function sagemKillMedia()
-{
-    if (typeof (AVMedia) != 'undefined')
-    	AVMedia.Kill();
-}
-
-function sagemPowerOff()
-{
-	if (typeof(sagem) != 'undefined'){
-		document.location.href = 'tv://no_tv_no_radio';
-		sagem.Set('STB', 'FRONTPANEL', 'CLOSE' );
-		sagem.Set('STB', 'POWER_STATE', 'STANDBY');
-	}
-}
-
-//==================================================
 // Helper functions ================================
 
 function compareGroups(a,b)
@@ -838,11 +603,6 @@ function cloneObject(source)
         else
             this[i] = source[i];
     }
-}
-
-function alphaToHex(nPercent)
-{
-    return (Math.round(nPercent*2.55)).toString(16);
 }
 
 // TODO: Try this function for string concentration
@@ -874,7 +634,6 @@ function test()
 {
    
 }
-
 //==================================================
 
 
