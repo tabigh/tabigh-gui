@@ -1,66 +1,95 @@
 <?php
+/**
+* playlist.php
+* iptv-stb-gui
+* http://code.google.com/p/iptv-stb-gui/
+*/
 
-  $file = "siol.m3u";
-  $arChanInfo = array();
-  $handle = @fopen($file, "r");
-    
-  if ($handle)
+// input file
+$file = 'siol.m3u';
+// output string
+$output = '';
+
+$handle = @fopen($file, 'r');
+  
+if ($handle)
+{
+  $channel_info = array();
+  $order = array("\r\n", "\n", "\r");
+  $first = true;
+  $i = 0;
+  
+  // start of output
+  $output .= 'la=[';
+  
+  while (!feof($handle))
   {
-    $order = array("\r\n", "\n", "\r");
-    $first=true;
-	$i=0;
-    echo "la=[";
-    while (!feof($handle))
-    {
-        $buffer = fgets($handle);
+      $buffer = fgets($handle);
+      
+      // if line starts with #EXTINF
+      if ((strlen($buffer) > 7) && (substr($buffer, 0, 7) == '#EXTINF'))
+      {
+         $data = explode(',', substr($buffer, 8));
+         // remove new line
+         $channel_info[1] = str_replace($order, '', $data[1]);
+         $channel_info[2] = $data[0];
+      }
+      // if line starts with #EXTTV
+      else if ((strlen($buffer) > 6) && (substr($buffer, 0, 6) == '#EXTTV'))
+      {
+        $exttv_data = substr($buffer, stripos($buffer, ':') + 1);
+        $exttv_data = explode(';', $exttv_data);
 
-        if (strlen($buffer)>7 && substr($buffer,0,7)== "#EXTINF")
-        {
-           $comma_sep = stripos($buffer,",");
-           $arChanInfo[1]= str_replace($order, "" , substr($buffer, $comma_sep +1));
-           $arChanInfo[2]= substr($buffer,8,$comma_sep -8);
+        // some channels have multiple categories, separated by a comma
+        // use only first
+        $categories = explode(',', $exttv_data[0]);
+        $channel_info[5]= $categories[0];
            
-        }
-        else if (strlen($buffer)>6 && substr($buffer,0,6)== "#EXTTV" )
-        {
-          $exttv_data = substr($buffer,stripos($buffer,":")+1);
-          $arexttv_data = explode(";", $exttv_data);
-          if (count(arexttv>3))
-          {
-             $arTemp = explode(",",$arexttv_data[0]);
-             $arChanInfo[5]= $arTemp[0];
-             $arChanInfo[6]= $arexttv_data[1];
-             $arChanInfo[7]=  str_replace($order, "", $arexttv_data[2]);
-             $arChanInfo[8]= "false"; 
-          }
-        }
-        else if (strlen($buffer)>6 && substr($buffer,0,3)== "udp")
-        {
-          $nIpStart = stripos($buffer,"@")+1;
-          $nIpEnd = stripos($buffer,":",$nIpStart);
-          $nPortStart = $nIpEnd+1;
-          $sIp = substr($buffer, $nIpStart, $nIpEnd-$nIpStart);
-          $sPort =substr($buffer,$nPortStart);
+        $channel_info[6]= $exttv_data[1];
+        // remove new line
+        $channel_info[7]=  str_replace($order, '', $exttv_data[2]);
+        $channel_info[8]= 'false'; 
+      }
+      // if line starts with udp
+      else if ((strlen($buffer) > 6) && (substr($buffer,0,3) == 'udp'))
+      {
+        $ip_start = stripos($buffer, '@') + 1;
+        $ip_end = stripos($buffer, ':', $ip_start);
+        $port_start = $ip_end + 1;
+        $ip = substr($buffer, $ip_start, $ip_end - $ip_start);
+        $port =substr($buffer, $port_start);
 
-          $arChanInfo[3]=$sIp;
-          $arChanInfo[4]= str_replace($order, "", $sPort);
-		  $arChanInfo[0]= $i;
-		  $i++;
-
-          if (!$first)
-          {
-             echo ",";
-          }
-          echo "[", $arChanInfo[0],",", json_encode($arChanInfo[1]),",", json_encode($arChanInfo[2]),",",json_encode($arChanInfo[3]),",",json_encode($arChanInfo[4]),",",json_encode($arChanInfo[5]),",",json_encode($arChanInfo[6]),",",json_encode($arChanInfo[7]),",",json_encode($arChanInfo[8]),"]";
+        $channel_info[3] = $ip;
+        $channel_info[4] = str_replace($order, '', $port);
+	      $channel_info[0]= $i;
+	      
+	      $i++;
         
-          $first=false;
-          unset($arChanInfo);
-          $arChanInfo = array();   
+        // If not first, add a comma before
+        if (!$first)
+        {
+           $output .= ',';
         }
-    }
-    echo "];";
-    fclose($handle);
+        
+        //channel data
+        $output .= '['.$channel_info[0].',"'.$channel_info[1].'","'.$channel_info[2];
+        $output .= '","'.$channel_info[3].'","'.$channel_info[4].'","'.$channel_info[5];
+        $output .= '","'.$channel_info[6].'","'.$channel_info[7].'","'.$channel_info[8].'"]';
+        
+        $first=false;
+        
+        unset($channel_info);
+        $channel_info = array();   
+      }
   }
+  
+  // end of output
+  $output .= '];';
+  fclose($handle);
+}
+else {
+  // error file not found
+  $output .= 'la=[[0,"Napaka: datoteka '.$file.' ne obstaja.","1","","","","","","false"]];';
+}
 
-?>
-
+echo $output;

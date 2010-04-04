@@ -88,6 +88,8 @@ function init()
 	loadPlaylist();
 	downloadCurrentEpg();
 	maxWordCount();
+	//change display to current channel
+	sagemSetDisplay('1');
 }
 
 // LoadPlaylist handler
@@ -409,6 +411,8 @@ function chChange(bDirection)
 	gnCurrentItemIndex=gnCurrentIndex;
 	sagemJoinMulticast(gaPlaylistFiltered[gnCurrentIndex][3] +':'+ gaPlaylistFiltered[gnCurrentIndex][4]);
 	displayOsdBanner(true);	//show epg for selected channel
+	//change display to current channel
+	sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
 }
 
 // Key input handler.
@@ -441,6 +445,8 @@ function chSetNum()
 		   gnCurrentIndex=i;	// Update current index.
 		   sagemJoinMulticast(gaPlaylistFiltered[i][3] +':'+ gaPlaylistFiltered[i][4]);
 		   displayOsdBanner(true);
+		   //change display to current channel
+       sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
 		   break;
 	   }
 	}
@@ -551,6 +557,8 @@ function keyAction(e)
 				 gnCurrentGroup = gnCurrentItemGroup;
 				 displayGroupBox(false,false);	// close group box
 				 displayOsdBanner(true);
+				 //change display to current channel
+         sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
 			}
 			else	 
 				 displayGroupBox(true);	//Show only group box - no osd banner.
