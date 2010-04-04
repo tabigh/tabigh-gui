@@ -27,6 +27,7 @@ var gnCurrentItemGroup = -1;	// currrent selected group index, -1=all
 var gnCurrentGroup = gnCurrentItemGroup;	// current group index (playing)
 var gnCurrentItemIndex = 0;		// index of a current selected item in a groupbox
 var gnCurrentIndex = 0;		// index of a current playing item
+var gnPreviousIndex = 0;  // index of a previous playing item
 
 // element visibility
 var gbGroupBoxVisible = false;
@@ -81,8 +82,8 @@ KEY_TV=0x40000097;
 
 function init()
 {
-    sagemSetDateTime();
-    sagemSetLoadingPictTime();
+  sagemSetDateTime();
+  sagemSetLoadingPictTime();
 	sagemSetDimming();
 	sagemKillMedia();
 	loadPlaylist();
@@ -110,7 +111,7 @@ function loadPlaylistHandler(ar)
 // Load playlist.
 function loadPlaylist()
 {
-    var sTempFrame = window.top.plFrame;
+  var sTempFrame = window.top.plFrame;
 	var sHtml = '<html><META http-equiv=\"PRAGMA\" content=\"NO-CACHE\"><META name=\"cache-control\" content=\"NO-CACHE\"></head>';
 	sHtml += '<script src=\"playlist.php\" type=\"text/javascript\"><\/script>';
 	sHtml += '<script language=\"JavaScript\">';
@@ -396,6 +397,8 @@ function groupChange(bDirection)
 // Set next/prev channel.
 function chChange(bDirection)
 {
+  gnPreviousIndex = gnCurrentIndex;
+  
 	var nSize = gaPlaylistFiltered.length;
 	if (bDirection){
 		gnCurrentIndex++;
@@ -409,6 +412,18 @@ function chChange(bDirection)
 	}
 		
 	gnCurrentItemIndex=gnCurrentIndex;
+	sagemJoinMulticast(gaPlaylistFiltered[gnCurrentIndex][3] +':'+ gaPlaylistFiltered[gnCurrentIndex][4]);
+	displayOsdBanner(true);	//show epg for selected channel
+	//change display to current channel
+	sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
+}
+
+// Switch to previous channel
+function previousChannel()
+{
+  gnCurrentIndex = gnPreviousIndex;
+  
+  gnCurrentItemIndex=gnCurrentIndex;
 	sagemJoinMulticast(gaPlaylistFiltered[gnCurrentIndex][3] +':'+ gaPlaylistFiltered[gnCurrentIndex][4]);
 	displayOsdBanner(true);	//show epg for selected channel
 	//change display to current channel
@@ -430,18 +445,19 @@ function keyInput(n)
 
 function chSetNum()
 {
-    var nChNum = Number(gsNumpad);
+  var nChNum = Number(gsNumpad);
 	var nSize = gaPlaylistFiltered.length;
 	gsNumpad='';
 	
-    displayNumpadInput(false);
-    filterByGroup(-1);
+  displayNumpadInput(false);
+  filterByGroup(-1);
 	
 	// find channel
 	for (var i=0; i<nSize; i++)
 	{
 	   if (gaPlaylistFiltered[i][2]==nChNum){
-	       gnCurrentItemIndex=i;	// Update item in a group box.
+	     gnPreviousIndex = gnCurrentIndex; // set previous channel
+	     gnCurrentItemIndex=i;	// Update item in a group box.
 		   gnCurrentIndex=i;	// Update current index.
 		   sagemJoinMulticast(gaPlaylistFiltered[i][3] +':'+ gaPlaylistFiltered[i][4]);
 		   displayOsdBanner(true);
@@ -552,7 +568,8 @@ function keyAction(e)
             return(1);
 		case KEY_OK:
 			if (gbGroupBoxVisible) {	// Set selected channel.
-		         sagemJoinMulticast(gaPlaylistFiltered[gnCurrentItemIndex][3] +':'+ gaPlaylistFiltered[gnCurrentItemIndex][4]);
+			   gnPreviousIndex = gnCurrentIndex; // set previous channel
+		     sagemJoinMulticast(gaPlaylistFiltered[gnCurrentItemIndex][3] +':'+ gaPlaylistFiltered[gnCurrentItemIndex][4]);
 				 gnCurrentIndex = gnCurrentItemIndex;
 				 gnCurrentGroup = gnCurrentItemGroup;
 				 displayGroupBox(false,false);	// close group box
@@ -566,6 +583,7 @@ function keyAction(e)
         case KEY_IDENT:
             return(0);
 		case KEY_RETOUR: 
+      previousChannel();
             return(0);
 		case KEY_POWER:
             sagemPowerOff();
