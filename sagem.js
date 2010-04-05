@@ -29,6 +29,7 @@ var gnCurrentGroup = gnCurrentItemGroup;	// current group index (playing)
 var gnCurrentItemIndex = 0;		// index of a current selected item in a groupbox
 var gnCurrentIndex = 0;		// index of a current playing item
 var gnPreviousIndex = 0;  // index of a previous playing item
+var gnPreviousGroup= -1;	// index of a previous group
 
 // visibility of elements
 var gbGroupBoxVisible = false;
@@ -98,6 +99,7 @@ function init()
 function loadPlaylistHandler(ar)
 {
 	gaPlaylist = ar;
+	gaPlaylistFiltered = gaPlaylist;
 	getUniqueGroups();
 	filterByGroup(-1);
 
@@ -159,6 +161,7 @@ function getUniqueGroups()
 // Populate an array of channelInfo arrays filtered by group name.
 function filterByGroup(nGroupIndex)
 {
+	
 	if (nGroupIndex == -1){
 	    // Don't filter, just point to gaPlaylist array.
 		resetGroupFiltering();
@@ -408,36 +411,44 @@ function groupChange(bDirection)
 // Set next/prev channel.
 function chChange(bDirection)
 {
-  gnPreviousIndex = gnCurrentIndex;
+    var nIndex = gnCurrentIndex++;
   
 	var nSize = gaPlaylistFiltered.length;
 	if (bDirection){
-		gnCurrentIndex++;
-		if (gnCurrentIndex >= nSize)
-			gnCurrentIndex=0;
+		nIndex++;
+		if (nIndex >= nSize)
+			nIndex=0;
 	}
 	else{
-		gnCurrentIndex--;
-		if (gnCurrentIndex < 0)
-			gnCurrentIndex=nSize-1;
+		nIndex--;
+		if (nIndex < 0)
+			nIndex=nSize-1;
 	}
 		
-	gnCurrentItemIndex=gnCurrentIndex;
-	sagemJoinMulticast(gaPlaylistFiltered[gnCurrentIndex][3] +':'+ gaPlaylistFiltered[gnCurrentIndex][4]);
+	setChannel(nIndex,gnCurrentGroup);
 	displayOsdBanner(true);	//Show epg for selected channel.
-	//change display to current channel
-	sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
+}
+
+function setChannel(nIndex,nGroup)
+{
+    gnPreviousIndex = gnCurrentIndex;
+    gnPreviousGroup = gnCurrentGroup;
+    gnCurrentIndex = nIndex;
+	gnCurrentItemIndex = nIndex;
+	gnCurrentGroup = nGroup;
+	gnCurrentItemGroup = nGroup;
+
+	sagemJoinMulticast(gaPlaylistFiltered[nIndex][3] +':'+ gaPlaylistFiltered[nIndex][4]);
+	//change display to current channel	
+	sagemSetDisplay(gaPlaylistFiltered[gnCurrentIndex][2]);
 }
 
 // Switch to previous channel
 function previousChannel()
 {
-	gnCurrentIndex = gnPreviousIndex;
-	gnCurrentItemIndex=gnCurrentIndex;
-	sagemJoinMulticast(gaPlaylistFiltered[gnCurrentIndex][3] +':'+ gaPlaylistFiltered[gnCurrentIndex][4]);
+	filterByGroup(gnPreviousGroup); // refilter if needed
+	setChannel(gnPreviousIndex,gnPreviousGroup);
 	displayOsdBanner(true);	//show epg for selected channel
-	//change display to current channel
-	sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
 }
 
 // Key input handler.
@@ -466,13 +477,8 @@ function chSetNum()
 	for (var i=0; i<nSize; i++)
 	{
 		if (gaPlaylistFiltered[i][2]==nChNum){
-			gnPreviousIndex = gnCurrentIndex; // set previous channel
-			gnCurrentItemIndex=i;	// Update item in a channel selection table.
-			gnCurrentIndex=i;	// Update current index.
-			sagemJoinMulticast(gaPlaylistFiltered[i][3] +':'+ gaPlaylistFiltered[i][4]);
+            setChannel(i,-1);
 			displayOsdBanner(true);
-			//change display to current channel
-			sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
 			break;
 	   }
 	}
@@ -578,14 +584,9 @@ function keyAction(e)
             return(1);
 		case KEY_OK:
 			if (gbGroupBoxVisible) {	// Set selected channel.
-				gnPreviousIndex = gnCurrentIndex; // Set previous channel.
-				sagemJoinMulticast(gaPlaylistFiltered[gnCurrentItemIndex][3] +':'+ gaPlaylistFiltered[gnCurrentItemIndex][4]);
-				gnCurrentIndex = gnCurrentItemIndex;
-				gnCurrentGroup = gnCurrentItemGroup;
+			    setChannel(gnCurrentItemIndex,gnCurrentItemGroup);
 				displayGroupBox(false,false);	// Close channel selection table.
 				displayOsdBanner(true);
-				// Change display to current channel.
-				sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
 			}
 			else	 
 				 displayGroupBox(true);	// Show only group box - no osd banner.
@@ -593,7 +594,7 @@ function keyAction(e)
         case KEY_IDENT:
             return(0);
 		case KEY_RETOUR: 
-      previousChannel();
+			previousChannel();
             return(0);
 		case KEY_POWER:
             sagemPowerOff();
