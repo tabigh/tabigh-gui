@@ -29,9 +29,9 @@ gsOsdBannerEpgAlpha = alphaToHex(gnOsdBannerEpgAlpha);
 
 // text metrics
 gnGrpBoxFontFactor = 11.41;
-gnGrpBoxMaxWords= 0;
+gnGrpBoxMaxLetters= 0;
 gnOsdBanFontFactor = 10.0;
-gnOsdBanEpgMaxWords= 0;
+gnOsdBanEpgMaxLetters= 0;
 gn_GrpBoxRow0Width = Math.floor(40*gnGroupBoxFontSize/100);
 
 //css
@@ -147,7 +147,7 @@ function drawChanSelTable()
 		}
         		
 	    sTableBody +=  '<tr><td class=\"' + sRowCssLeft + '\" >' + gaPlaylistFiltered[i+nItemStart][2] +'</td>'+
-					   '<td class=\"' + sRowCssRight + '\" >' + gaPlaylistFiltered[i+nItemStart][1].trunc(gnGrpBoxMaxWords) + '</td></tr>';
+					   '<td class=\"' + sRowCssRight + '\" >' + gaPlaylistFiltered[i+nItemStart][1].trunc(gnGrpBoxMaxLetters) + '</td></tr>';
 	}
 
 	return  sTableHeader + sTableBody + sTableEnd ;
@@ -167,13 +167,13 @@ function drawOsdBanner()
 		sNextShow = gsNextShow;
 		nNextShowLen = gsNextShow.length;
 		sNextShowDesc = gsNextShowDesc;
-		if (nCurShowLen + sCurShowDesc.length > gnOsdBanEpgMaxWords){
-		    sCurShow = gsCurrentShow.trunc(gnOsdBanEpgMaxWords);
-			sCurShowDesc = gsCurrentShowDesc.trunc(Math.max(0,gnOsdBanEpgMaxWords-nCurShowLen));
+		if (nCurShowLen + sCurShowDesc.length > gnOsdBanEpgMaxLetters){
+		    sCurShow = gsCurrentShow.trunc(gnOsdBanEpgMaxLetters);
+			sCurShowDesc = gsCurrentShowDesc.trunc(Math.max(0,gnOsdBanEpgMaxLetters-nCurShowLen));
 		}
-		if (nNextShowLen + sNextShowDesc.length > gnOsdBanEpgMaxWords){
-		    sNextShow = gsNextShow.trunc(gnOsdBanEpgMaxWords);
-			sNextShowDesc = gsNextShowDesc.trunc(Math.max(0,gnOsdBanEpgMaxWords - nNextShowLen ));
+		if (nNextShowLen + sNextShowDesc.length > gnOsdBanEpgMaxLetters){
+		    sNextShow = gsNextShow.trunc(gnOsdBanEpgMaxLetters);
+			sNextShowDesc = gsNextShowDesc.trunc(Math.max(0,gnOsdBanEpgMaxLetters - nNextShowLen ));
 		}
 		sTable+='<td class="r13c01" colspan="3">'+sCurShow+'<span class="desc"> '+sCurShowDesc+'</span></td></tr><tr>'+
 				'<td class="r2c01" colspan="3"><img src="progress.gif" width='+ gsCurrentProgress +'% height=4px></td></tr><tr>'+

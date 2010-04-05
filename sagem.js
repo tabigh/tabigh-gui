@@ -15,13 +15,14 @@
 // Browser AntFresco 4.x : XMLHttpRequest not supported, JS 1.3, CSS 1.0, DOM level 0( No InnerHtml...)
 // Body height: 576px (HD resolutions also).
 // Main overlay frame consist of two table cells: Upper 0-400px, Lower 400-576px.
+
 // channelInfo array (PHP): 
 //[0=index(number), 1=name, 2=number, 3=ip, 4=port, 5=group, 6=language 7=epg, 8=locked] 
 
 var gaPlaylist = new Array();	// array of channelInfo arrays 
 var gaPlaylistFiltered = new Array();	 // array of filtered channelInfo arrays
 var gaGroups = new Array();		// array of unique groups array (0=index,1=group name) 
-var gaCurrentEpg = new Array();	// current epg data
+var gaCurrentEpg = new Array();	// epg data for all channels (Currently only Siol ISP is supported.)
 
 var gnCurrentItemGroup = -1;	// currrent selected group index, -1=all
 var gnCurrentGroup = gnCurrentItemGroup;	// current group index (playing)
@@ -29,7 +30,7 @@ var gnCurrentItemIndex = 0;		// index of a current selected item in a groupbox
 var gnCurrentIndex = 0;		// index of a current playing item
 var gnPreviousIndex = 0;  // index of a previous playing item
 
-// element visibility
+// visibility of elements
 var gbGroupBoxVisible = false;
 var gbNumInputVisible = false;
 var gbOsdBannerVisible = false;
@@ -82,13 +83,13 @@ KEY_TV=0x40000097;
 
 function init()
 {
-  sagemSetDateTime();
-  sagemSetLoadingPictTime();
+	sagemSetDateTime();
+	sagemSetLoadingPictTime();
 	sagemSetDimming();
 	sagemKillMedia();
 	loadPlaylist();
 	downloadCurrentEpg();
-	maxWordCount();
+	maxLetters();
 	//change display to current channel
 	sagemSetDisplay('1');
 }
@@ -96,22 +97,23 @@ function init()
 // LoadPlaylist handler
 function loadPlaylistHandler(ar)
 {
-    gaPlaylist = ar;
+	gaPlaylist = ar;
 	getUniqueGroups();
 	filterByGroup(-1);
-	
+
+	//auto start
 	if (gaPlaylistFiltered.length > gnCurrentIndex)	{
 		sagemJoinMulticast(gaPlaylistFiltered[gnCurrentIndex][3] +':'+ gaPlaylistFiltered[gnCurrentIndex][4]);
 		displayOsdBanner(true);
 	}
-	
+
 	gbLoading = false;
 }
 
-// Load playlist.
+// Load playlist from server (EPG_SERVER).
 function loadPlaylist()
 {
-  var sTempFrame = window.top.plFrame;
+	var sTempFrame = window.top.plFrame;
 	var sHtml = '<html><META http-equiv=\"PRAGMA\" content=\"NO-CACHE\"><META name=\"cache-control\" content=\"NO-CACHE\"></head>';
 	sHtml += '<script src=\"playlist.php\" type=\"text/javascript\"><\/script>';
 	sHtml += '<script language=\"JavaScript\">';
@@ -123,84 +125,88 @@ function loadPlaylist()
 	sTempFrame.document.close();	
 }
 
-//Fixme
-function maxWordCount()
+// Calculate maximum number of letters that would fit into channel selection table and osd banner, based on font size and table width. 
+function maxLetters()
 {
-     var nBodyWidth = 720-(2*gnMarginLeft);
-     var nGBWidth = (gnGroupBoxWidth/100 * nBodyWidth) - gn_GrpBoxRow0Width;
-     gnGrpBoxMaxWords = Math.round( nGBWidth / (gnGrpBoxFontFactor * gnGroupBoxFontSize /100) );
+	var nBodyWidth = 720-(2*gnMarginLeft); //actual body width
+	var nGBWidth = (gnGroupBoxWidth/100 * nBodyWidth) - gn_GrpBoxRow0Width; // right column width of the channel selection table
+	gnGrpBoxMaxLetters = Math.round( nGBWidth / (gnGrpBoxFontFactor * gnGroupBoxFontSize /100) ); 
 	 
-	 var nOBDescWidth =  (gnOsdBannerWidth/100) * (nBodyWidth) ;
-	 gnOsdBanEpgMaxWords = Math.round( nOBDescWidth / (gnOsdBanFontFactor * gnOsdBannerFontSize/100) );
+	var nOBDescWidth =  (gnOsdBannerWidth/100) * (nBodyWidth) ; // osd banner width
+	gnOsdBanEpgMaxLetters = Math.round( nOBDescWidth / (gnOsdBanFontFactor * gnOsdBannerFontSize/100) ); 
 }
 
 // Create an array of unique groups.
 function getUniqueGroups()
 {
-    nPlSize = gaPlaylist.length;
+	nPlSize = gaPlaylist.length;
 	for (var i=0; i<nPlSize; i++){
-	     var nSize = gaGroups.length;
-	     var bExists = false;
-	
-	    for (var j=0; j<nSize; j++){  
-	        if (gaPlaylist[i][5]==gaGroups[j][1]) {
-		        bExists=true;
-			    break;
-		    }
-	    }
-        if (!bExists)
-	        gaGroups.push([i,gaPlaylist[i][5]]);
+		var nSize = gaGroups.length;
+		var bExists = false;
+
+		for (var j=0; j<nSize; j++){  
+			if (gaPlaylist[i][5]==gaGroups[j][1]) {
+				bExists=true;
+				break;
+			}
+		}
+		if (!bExists)
+		gaGroups.push([i,gaPlaylist[i][5]]);
 	}
-    gaGroups.sort(compareGroups);	
+	gaGroups.sort(compareGroups); // sort by name (ASCII only)	
 }
 
 // Populate an array of channelInfo arrays filtered by group name.
 function filterByGroup(nGroupIndex)
 {
 	if (nGroupIndex == -1){
+	    // Don't filter, just point to gaPlaylist array.
 		resetGroupFiltering();
 		return;
 	}
 
-    var nSize = gaPlaylist.length;
+	var nSize = gaPlaylist.length;
 	var sGroupName = '' ;
 	if (nGroupIndex >= 0)
-	    sGroupName = gaGroups[nGroupIndex][1];
+		sGroupName = gaGroups[nGroupIndex][1];
 
-	gaPlaylistFiltered = [];	//Clear array.
-	
+	gaPlaylistFiltered = [];
+
 	for (var i=0; i<nSize; i++){
-	    if (nGroupIndex==-1 || gaPlaylist[i][5]==sGroupName)
-		    gaPlaylistFiltered.push(new cloneObject(gaPlaylist[i]));
+		if (gaPlaylist[i][5]==sGroupName)
+			gaPlaylistFiltered.push(new cloneObject(gaPlaylist[i]));
 	}
 }
 
-// Change group to "ALL"
+// Change current group to "All"
+// This function should not be used directly.
 function resetGroupFiltering()
 {
-	gnCurrentItemGroup = -1; 
-    gnCurrentGroup = -1; 
-	gaPlaylistFiltered = [] ; 
-	gaPlaylistFiltered = gaPlaylist;
+	gnCurrentItemGroup = -1; // Reset current group index in channel selection table.
+	gnCurrentGroup = -1;	// Reset current group index.
+	gaPlaylistFiltered = [] ; // Clear array
+	gaPlaylistFiltered = gaPlaylist; // gaPlaylist holds all channels.
 }
 
+// Display or hide channel selection table.
+// If bRefresh is false, main frame is not rendered.
 function displayGroupBox(bDisplay, bRefresh)
 {
     if (bRefresh === undefined)
 		bRefresh=true;
 
     if(bDisplay){
-		stopTimer(gnTmGroupBoxHide);
+		stopTimer(gnTmGroupBoxHide); 
 	    gbGroupBoxVisible=true; 
-	    gnTmGroupBoxHide = setTimeout("displayGroupBox(false)",gnTmGroupBoxHideInterval);
+	    gnTmGroupBoxHide = setTimeout("displayGroupBox(false)",gnTmGroupBoxHideInterval); 
 	}
 	else{
 	    stopTimer(gnTmGroupBoxHide);
 	    gbGroupBoxVisible=false;
-		gnCurrentItemIndex=gnCurrentIndex; // reset group box selector !!!
+		gnCurrentItemIndex=gnCurrentIndex; // Change currently selected index to the index of a currently playing channel.
 		
 		if(gnCurrentItemGroup != gnCurrentGroup){
-		    gnCurrentItemGroup = gnCurrentGroup; // reset group !!!
+		    gnCurrentItemGroup = gnCurrentGroup; // Change currently selected group to a group of a currently playing channel.
 			filterByGroup(gnCurrentGroup);
 		}
 	}
@@ -208,6 +214,8 @@ function displayGroupBox(bDisplay, bRefresh)
 	    drawMainFrame();
 }
 
+// Display or hide osd banner.
+// If bRefresh is false, main frame is not rendered.
 function displayOsdBanner(bDisplay, bRefresh)
 {
     if (bRefresh === undefined)
@@ -226,6 +234,7 @@ function displayOsdBanner(bDisplay, bRefresh)
 	    drawMainFrame();
 }
 
+// Display or hide numeric input.
 function displayNumpadInput(b)
 {
     if(b)
@@ -266,6 +275,7 @@ function drawMainFrame()
 	sTempFrame.document.close();
 }
 
+// Clear everything.
 function clearMainFrame()
 {
     if (gbGroupBoxVisible)
@@ -285,6 +295,7 @@ function getCurrentEpg()
    var nTimeNow;
    var nLength;
    
+	// Reset previous values.
     gsCurrentShow='';
 	gsCurrentShowDesc = '';
 	gsCurrentProgress ='0';
@@ -313,7 +324,7 @@ function getCurrentEpg()
 	   gsCurrentShowDesc = gaCurrentEpg[i][7] ;
 	   gsCurrentProgress=Math.max(0,Math.min(100,Math.round((nTimeNow-gaCurrentEpg[i][4])*100/(nLength))))+'' ;
 
-	   //check if next show is listed
+	   // Check if next show is listed.
 	   if (i+1 < nSize){
 	       if (gaCurrentEpg[i+1][0]==sEpgId){
 		       dtStart.setTime(gaCurrentEpg[i+1][4]);
@@ -326,7 +337,7 @@ function getCurrentEpg()
 
 function downloadCurrentEpgHandler(ar)
 {
-    gaCurrentEpg = [];  // clear array
+    gaCurrentEpg = [];
     gaCurrentEpg= ar;
 }
 
@@ -413,7 +424,7 @@ function chChange(bDirection)
 		
 	gnCurrentItemIndex=gnCurrentIndex;
 	sagemJoinMulticast(gaPlaylistFiltered[gnCurrentIndex][3] +':'+ gaPlaylistFiltered[gnCurrentIndex][4]);
-	displayOsdBanner(true);	//show epg for selected channel
+	displayOsdBanner(true);	//Show epg for selected channel.
 	//change display to current channel
 	sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
 }
@@ -421,9 +432,8 @@ function chChange(bDirection)
 // Switch to previous channel
 function previousChannel()
 {
-  gnCurrentIndex = gnPreviousIndex;
-  
-  gnCurrentItemIndex=gnCurrentIndex;
+	gnCurrentIndex = gnPreviousIndex;
+	gnCurrentItemIndex=gnCurrentIndex;
 	sagemJoinMulticast(gaPlaylistFiltered[gnCurrentIndex][3] +':'+ gaPlaylistFiltered[gnCurrentIndex][4]);
 	displayOsdBanner(true);	//show epg for selected channel
 	//change display to current channel
@@ -434,9 +444,9 @@ function previousChannel()
 function keyInput(n)
 {
     if (gsNumpad.length<3)
-	    gsNumpad+=n.toString();
+		gsNumpad+=n.toString();
 	else
-        gsNumpad = n.toString();
+		gsNumpad = n.toString();
 		
 	displayNumpadInput(true);
 	stopTimer(gnTmNumpadInterval);
@@ -445,25 +455,25 @@ function keyInput(n)
 
 function chSetNum()
 {
-  var nChNum = Number(gsNumpad);
+	var nChNum = Number(gsNumpad);
 	var nSize = gaPlaylistFiltered.length;
 	gsNumpad='';
 	
-  displayNumpadInput(false);
-  filterByGroup(-1);
+	displayNumpadInput(false);
+	filterByGroup(-1);
 	
 	// find channel
 	for (var i=0; i<nSize; i++)
 	{
-	   if (gaPlaylistFiltered[i][2]==nChNum){
-	     gnPreviousIndex = gnCurrentIndex; // set previous channel
-	     gnCurrentItemIndex=i;	// Update item in a group box.
-		   gnCurrentIndex=i;	// Update current index.
-		   sagemJoinMulticast(gaPlaylistFiltered[i][3] +':'+ gaPlaylistFiltered[i][4]);
-		   displayOsdBanner(true);
-		   //change display to current channel
-       sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
-		   break;
+		if (gaPlaylistFiltered[i][2]==nChNum){
+			gnPreviousIndex = gnCurrentIndex; // set previous channel
+			gnCurrentItemIndex=i;	// Update item in a channel selection table.
+			gnCurrentIndex=i;	// Update current index.
+			sagemJoinMulticast(gaPlaylistFiltered[i][3] +':'+ gaPlaylistFiltered[i][4]);
+			displayOsdBanner(true);
+			//change display to current channel
+			sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
+			break;
 	   }
 	}
 	stopTimer(gnTmNumpad);	// stop timer
@@ -568,17 +578,17 @@ function keyAction(e)
             return(1);
 		case KEY_OK:
 			if (gbGroupBoxVisible) {	// Set selected channel.
-			   gnPreviousIndex = gnCurrentIndex; // set previous channel
-		     sagemJoinMulticast(gaPlaylistFiltered[gnCurrentItemIndex][3] +':'+ gaPlaylistFiltered[gnCurrentItemIndex][4]);
-				 gnCurrentIndex = gnCurrentItemIndex;
-				 gnCurrentGroup = gnCurrentItemGroup;
-				 displayGroupBox(false,false);	// close group box
-				 displayOsdBanner(true);
-				 //change display to current channel
-         sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
+				gnPreviousIndex = gnCurrentIndex; // Set previous channel.
+				sagemJoinMulticast(gaPlaylistFiltered[gnCurrentItemIndex][3] +':'+ gaPlaylistFiltered[gnCurrentItemIndex][4]);
+				gnCurrentIndex = gnCurrentItemIndex;
+				gnCurrentGroup = gnCurrentItemGroup;
+				displayGroupBox(false,false);	// Close channel selection table.
+				displayOsdBanner(true);
+				// Change display to current channel.
+				sagemSetDisplay(gaPlaylistFiltered[gnCurrentItemIndex][2]);
 			}
 			else	 
-				 displayGroupBox(true);	//Show only group box - no osd banner.
+				 displayGroupBox(true);	// Show only group box - no osd banner.
 			 return(0);
         case KEY_IDENT:
             return(0);
