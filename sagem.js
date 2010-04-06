@@ -1,15 +1,24 @@
-﻿// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+﻿/*
+This file is part of iptv-stb-gui.
 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+Copyright (C) 2010
 
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+iptv-stb-gui is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+iptv-stb-gui is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with iptv-stb-gui.  If not, see <http://www.gnu.org/licenses/>.
+
+http://code.google.com/p/iptv-stb-gui/
+
+*/
 
 // Notes:
 // Browser AntFresco 4.x : XMLHttpRequest not supported, JS 1.3, CSS 1.0, DOM level 0( No InnerHtml...)
@@ -27,7 +36,7 @@ var gaCurrentEpg = new Array();	// epg data for all channels (Currently only Sio
 var gnCurrentItemGroup = -1;	// currrent selected group index, -1=all
 var gnCurrentGroup = gnCurrentItemGroup;	// current group index (playing)
 var gnCurrentItemIndex = 0;		// index of a current selected item in a groupbox
-var gnCurrentIndex = 0;		// index of a current playing item
+var gnCurrentIndex = 0; // index of a current playing item
 var gnPreviousIndex = 0;  // index of a previous playing item
 var gnPreviousGroup= -1;	// index of a previous group
 
@@ -84,15 +93,15 @@ KEY_TV=0x40000097;
 
 function init()
 {
-	sagemSetDateTime();
+	sagemSetDateTime(TIME_OFFSET);
 	sagemSetLoadingPictTime();
 	sagemSetDimming();
 	sagemKillMedia();
+	// comment in order to render on a browser
+	lastChannel();
 	loadPlaylist();
 	downloadCurrentEpg();
 	maxLetters();
-	//change display to current channel
-	sagemSetDisplay('1');
 }
 
 // LoadPlaylist handler
@@ -105,8 +114,7 @@ function loadPlaylistHandler(ar)
 
 	//auto start
 	if (gaPlaylistFiltered.length > gnCurrentIndex)	{
-		sagemJoinMulticast(gaPlaylistFiltered[gnCurrentIndex][3] +':'+ gaPlaylistFiltered[gnCurrentIndex][4]);
-		displayOsdBanner(true);
+		setChannel(gnCurrentIndex, gnCurrentGroup);
 	}
 	gbLoading = false;
 }
@@ -420,7 +428,6 @@ function chChange(bDirection)
 	}
 		
 	setChannel(nIndex,gnCurrentGroup);
-	displayOsdBanner(true);	//Show epg for selected channel.
 }
 
 function setChannel(nIndex,nGroup)
@@ -431,10 +438,13 @@ function setChannel(nIndex,nGroup)
 	gnCurrentItemIndex = nIndex; //Set index in the channel table.
 	gnCurrentGroup = nGroup; // Set current playing group.
 	gnCurrentItemGroup = nGroup; // Set group in channel table.
-
-	sagemJoinMulticast(gaPlaylistFiltered[nIndex][3] +':'+ gaPlaylistFiltered[nIndex][4]);
-	// change display to current channel	
-	sagemSetDisplay(gaPlaylistFiltered[gnCurrentIndex][2]);
+	
+	// comment in order to render on a browser
+	SAGEM_JS_Set("CURRENT_CHANNEL", gnCurrentIndex);
+	
+	sagemJoinMulticast(gaPlaylistFiltered[nIndex][3], gaPlaylistFiltered[nIndex][4]);
+	sagemSetDisplay(gaPlaylistFiltered[gnCurrentIndex][2]); // change display to current channel
+	displayOsdBanner(true);	//Show epg for selected channel.
 }
 
 // Switch to previous channel
@@ -443,7 +453,19 @@ function previousChannel()
     if (gnCurrentGroup != gnPreviousGroup)
 		filterByGroup(gnPreviousGroup); // refilter
 	setChannel(gnPreviousIndex,gnPreviousGroup);
-	displayOsdBanner(true);	//show epg for selected channel
+}
+
+// Gets last channel before standby
+function lastChannel()
+{
+	if (SAGEM_JS_Get("CURRENT_CHANNEL"))
+	{
+		gnCurrentIndex = parseInt(SAGEM_JS_Get("CURRENT_CHANNEL"));
+	}
+	else
+	{
+		gnCurrentIndex = 0;
+	}
 }
 
 // Key input handler.
@@ -473,7 +495,6 @@ function chSetNum()
 	{
 		if (gaPlaylistFiltered[i][2]==nChNum){
 			setChannel(i,-1);
-			displayOsdBanner(true);
 			break;
 		}
 	}
@@ -582,7 +603,6 @@ function keyAction(e)
 			if (gbGroupBoxVisible) {	// Set selected channel.
 				setChannel(gnCurrentItemIndex,gnCurrentItemGroup);
 				displayGroupBox(false,false);	// Close channel selection table.
-				displayOsdBanner(true);
 			}
 			else	 
 				displayGroupBox(true);	// Show only group box - no osd banner.
