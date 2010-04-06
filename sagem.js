@@ -97,8 +97,12 @@ function init()
 	sagemSetLoadingPictTime();
 	sagemSetDimming();
 	sagemKillMedia();
-	// comment in order to render on a browser
-	lastChannel();
+	
+	if (browser_test == false)
+	{
+		lastChannel();
+	}
+	
 	loadPlaylist();
 	downloadCurrentEpg();
 	maxLetters();
@@ -439,8 +443,10 @@ function setChannel(nIndex,nGroup)
 	gnCurrentGroup = nGroup; // Set current playing group.
 	gnCurrentItemGroup = nGroup; // Set group in channel table.
 	
-	// comment in order to render on a browser
-	SAGEM_JS_Set("CURRENT_CHANNEL", gnCurrentIndex);
+	if (browser_test == false)
+	{
+		SAGEM_JS_Set("CURRENT_CHANNEL", gnCurrentIndex);
+	}
 	
 	sagemJoinMulticast(gaPlaylistFiltered[nIndex][3], gaPlaylistFiltered[nIndex][4]);
 	sagemSetDisplay(gaPlaylistFiltered[gnCurrentIndex][2]); // change display to current channel

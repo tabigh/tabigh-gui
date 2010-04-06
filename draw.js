@@ -35,6 +35,13 @@ gsGroupBoxAlpha = alphaToHex(gnGroupBoxAlpha);
 gsOsdBannerHeaderAlpha = alphaToHex(gnOsdBannerHeaderAlpha); 
 gsOsdBannerEpgAlpha = alphaToHex(gnOsdBannerEpgAlpha); 
 
+if (browser_test == true)
+{
+	gsGroupBoxAlpha = '';
+	gsGroupBoxAlpha = '';
+	gsOsdBannerEpgAlpha = '';
+}
+
 // text metrics
 gnGrpBoxFontFactor = 11.41;
 gnGrpBoxMaxLetters= 0;

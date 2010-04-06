@@ -19,6 +19,8 @@ along with iptv-stb-gui.  If not, see <http://www.gnu.org/licenses/>.
 http://code.google.com/p/iptv-stb-gui/
 
 */
+// Display on browser, for testing
+browser_test = false;
 
 // Epg server (Siol internal network)
 EPG_SERVER = 'http://10.253.3.129/EpgThales/FetchEpg.aspx';
