@@ -84,3 +84,22 @@ function sagemPowerOff()
 		sagem.Set('STB', 'POWER_STATE', 'STANDBY');
 	}
 }
+
+function sagemCurrentChannelSet(index)
+{
+	if (typeof(sagem) != 'undefined'){
+		SAGEM_JS_Set("CURRENT_CHANNEL", index);
+	}
+}
+
+function sagemCurrentChannelGet()
+{
+	if (typeof(sagem) != 'undefined'){
+		if (SAGEM_JS_Get("CURRENT_CHANNEL"))
+			return parseInt(SAGEM_JS_Get("CURRENT_CHANNEL"));
+		else
+			return 0;
+	}
+	else
+		return 0;
+}

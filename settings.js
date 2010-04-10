@@ -19,8 +19,6 @@ along with iptv-stb-gui.  If not, see <http://www.gnu.org/licenses/>.
 http://code.google.com/p/iptv-stb-gui/
 
 */
-// Display on browser, for testing
-browser_test = false;
 
 // Epg server (Siol internal network)
 EPG_SERVER = 'http://10.253.3.129/EpgThales/FetchEpg.aspx';
@@ -28,69 +26,69 @@ EPG_SERVER = 'http://10.253.3.129/EpgThales/FetchEpg.aspx';
 TIME_OFFSET = 7200; // Siol: zimski cas: 3600, poletni 7200
 
 // dimensions =============================
-// Maximum number of items in a channel selection table.
+// Maximum number of items in a channel selection table. (default 9)
 gnMaxChanItems = 9;
-// Group table width (0-100)[%]
+// Group table width (0-100)[%] (default 30)
 gnGroupBoxWidth = 30;
-// Banner width (0-100)[%]
+// Banner width (0-100)[%] (default 100)
 gnOsdBannerWidth = 100;
-// Group table font size [%]
+// Group table font size [%] (default 100)
 gnGroupBoxFontSize = 100;
-// Osd banner font size (epg )[%]
+// Osd banner font size (epg )[%] (default 100)
 gnOsdBannerFontSize = 100;
-// overscan correction left [px]
+// overscan correction left [px] (default 46)
 gnMarginLeft = 46;
-// overscan correction top [px]
+// overscan correction top [px] (default 30)
 gnMarginTop = 30;
 // =========================================
 
 // Timeouts ================================
-// Group table hide timeout [ms]
+// Group table hide timeout [ms] (default 12000)
 gnTmGroupBoxHideInterval = 12000;
-// Banner hide timeout [ms]
+// Banner hide timeout [ms] (default 6000)
 gnTmOsdBannerHideInterval = 6000;
-// Numeric input timeout [ms]
+// Numeric input timeout [ms] (default 2000)
 gnTmNumpadInterval = 2000;
 // =========================================
 
 // Background transparency =================
-// Group table transparency (0-100)[%] 
+// Group table transparency (0-100)[%] (default 50)
 gnGroupBoxAlpha = 50; 
-// Banner header transparency (0-100)[%]
+// Banner header transparency (0-100)[%] (default 94)
 gnOsdBannerHeaderAlpha = 94; 
-// Banner epg transparency (0-100)[%]
+// Banner epg transparency (0-100)[%] (default 78)
 gnOsdBannerEpgAlpha = 78; 
 //==========================================
 
 // Colors ==================================
 // http://html-color-codes.info/
-// Group table background color.
+// Group table background color. (default #0000c4)
 gsGropBoxBackgroundColor = '#0000c4';
-// Group table header font color
+// Group table header font color (default #ffff00)
 gsGroupBoxHeaderColor = '#ffff00' ;
-// Group box table left font color (numbers)
+// Group box table left font color (numbers) (default #80f20d)
 gsGroupBoxLeftColor = '#80f20d' ; 
-// Group box table right font color (names)
+// Group box table right font color (names) (default white)
 gsGroupBoxRightColor = 'white' ;
-// Group box selected item color
+// Group box selected item color (default #808080)
 gsGroubBoxSelectorColor = '#808080';
-// Banner header background color
+// Banner header background color (default #808080)
 gsOsdBannerHeadBackColor = '#808080';
-// Banner epg background color 
+// Banner epg background color (default #0000c4)
 gsOsdBannerEpgBackColor = '#0000c4';
-// Banner: chan. number font color
+// Banner: chan. number font color (default #ffff00)
 gsOsdBannerNumColor = '#ffff00'; 
-// Banner: chan. name font color
+// Banner: chan. name font color (default white)
 gsOsdBannerNameColor = 'white';
-// Banner: clock font color 
+// Banner: clock font color (default white)
 gsOsdBannerClockColor = 'white';
-// Banner : epg name color
+// Banner : epg name color (default #ffff00)
 gsOsdBannerEpgColor = '#ffff00';
-// Banner : epg description color
+// Banner : epg description color (default white)
 gsOsdBannerEpgDescColor = 'white';
-// Numeric input background color
+// Numeric input background color (default black)
 gsNumericInputBackColor= 'black';
-// Numeric input font color
+// Numeric input font color (default yellow)
 gsnumericInputColor = 'yellow';
 // ==========================================
 

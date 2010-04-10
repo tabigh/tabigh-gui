@@ -22,7 +22,12 @@ http://code.google.com/p/iptv-stb-gui/
 */
 
 // input file
-$file = 'siol.m3u';
+// if not set default is siol.m3u
+if (isset($_GET['file']))
+	$file = $_GET['file'];
+else
+	$file = 'siol.m3u';
+
 // output string
 $output = '';
 

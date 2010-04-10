@@ -21,7 +21,7 @@ http://code.google.com/p/iptv-stb-gui/
 */
 
 // Notes:
-// Browser AntFresco 4.x : XMLHttpRequest not supported, JS 1.3, CSS 1.0, DOM level 0( No InnerHtml...)
+// Browser AntFresco 4.x : XMLHttpRequest not supported, JS 1.3, CSS 1.0, DOM level 0 (No InnerHtml...)
 // Body height: 576px (HD resolutions also).
 // Main overlay frame consist of two table rows: Upper 0-400px, Lower 400-576px.
 
@@ -52,60 +52,15 @@ var gnTmNumpad = 0;
 
 gnEpgDownloadInterval = 5 * 60 * 1000; // Download epg on every 5 minutes.
 
-var gbLoading = true;
-
-// keys 
-KEY_0=536870922;
-KEY_1=536870923;
-KEY_2=536870924;
-KEY_3=536870925;
-KEY_4=536870926;
-KEY_5=536870927;
-KEY_6=536870928;
-KEY_7=536870929;
-KEY_8=536870930;
-KEY_9=536870931;
-
-KEY_CHUP=0x40000013;
-KEY_CHDOWN=0x40000012;
-KEY_OK=0x40000004;
-KEY_RED=0x40000084;
-KEY_GREEN=0x40000085;
-KEY_YELLOW=0x40000086;
-KEY_BLUE=0x40000087;
-KEY_UP=0x4000000E;
-KEY_DOWN=0x4000000F;
-KEY_LEFT=0x40000010;
-KEY_RIGHT=0x40000011;
-KEY_MENU=0x4000000A;
-KEY_REFRESH=0x4000008A;
-KEY_RETOUR=0x4000008A;
-KEY_PLAY=0x40000100;
-KEY_IDENT=0x40000083;
-KEY_VOLUP=0x30000001;
-KEY_VOLDOWN=0x30000002;
-KEY_REW=0x40000105;
-KEY_FWD=0x40000104;
-KEY_MUTE=0x30000003;
-KEY_POWER=0x30000000;
-KEY_QUIT=0x40000082;
-KEY_TV=0x40000097;
-
 function init()
 {
 	sagemSetDateTime(TIME_OFFSET);
 	sagemSetLoadingPictTime();
 	sagemSetDimming();
 	sagemKillMedia();
-	
-	if (browser_test == false)
-	{
-		lastChannel();
-	}
-	
-	loadPlaylist();
-	downloadCurrentEpg();
 	maxLetters();
+	downloadCurrentEpg();
+	loadPlaylistHandler(la);
 }
 
 // LoadPlaylist handler
@@ -115,27 +70,14 @@ function loadPlaylistHandler(ar)
 	gaPlaylistFiltered = gaPlaylist;
 	getUniqueGroups();
 	filterByGroup(-1);
-
+	
+	// set current channel to last before standby
+	gnCurrentIndex = sagemCurrentChannelGet();
+	
 	//auto start
 	if (gaPlaylistFiltered.length > gnCurrentIndex)	{
 		setChannel(gnCurrentIndex, gnCurrentGroup);
 	}
-	gbLoading = false;
-}
-
-// Load playlist from server (EPG_SERVER).
-function loadPlaylist()
-{
-	var sTempFrame = window.top.plFrame;
-	var sHtml = '<html><META http-equiv=\"PRAGMA\" content=\"NO-CACHE\"><META name=\"cache-control\" content=\"NO-CACHE\"></head>';
-	sHtml += '<script src=\"playlist.php\" type=\"text/javascript\"><\/script>';
-	sHtml += '<script language=\"JavaScript\">';
-	sHtml += 'function init(){if(typeof(la) != \"undefined\" && la!=null ){window.top.loadPlaylistHandler(la);}}';
-	sHtml += '<\/script></body></html>';	
-	sHtml += '<body onload=\"init();\" onKeypress=\"javascript:return window.top.keyAction(event);\"></body></html>';
-	sTempFrame.document.open();
-	sTempFrame.document.write(sHtml);
-	sTempFrame.document.close();	
 }
 
 // Calculate maximum number of letters that would fit into channel selection table and osd banner, based on font size and table width. 
@@ -358,7 +300,7 @@ function downloadCurrentEpg()
 	sHtml += '<script src=\"'+EPG_SERVER+'?t='+getRTC().getTime()+'\" type=\"text/javascript\"><\/script>';
 	sHtml += '<script language=\"JavaScript\">';
 	sHtml += 'function init(){if(typeof(la) != \"undefined\" && la!=null ){window.top.downloadCurrentEpgHandler(la);}}';
-	sHtml += '<\/script></body></html>';	
+	sHtml += '<\/script>';	
 	sHtml += '<body onload=\"init();\" onKeypress=\"javascript:return window.top.keyAction(event);\"></body></html>';
 	sTempFrame.document.open();
 	sTempFrame.document.write(sHtml);
@@ -443,12 +385,8 @@ function setChannel(nIndex,nGroup)
 	gnCurrentGroup = nGroup; // Set current playing group.
 	gnCurrentItemGroup = nGroup; // Set group in channel table.
 	
-	if (browser_test == false)
-	{
-		SAGEM_JS_Set("CURRENT_CHANNEL", gnCurrentIndex);
-	}
-	
 	sagemJoinMulticast(gaPlaylistFiltered[nIndex][3], gaPlaylistFiltered[nIndex][4]);
+	sagemCurrentChannelSet(gnCurrentIndex)
 	sagemSetDisplay(gaPlaylistFiltered[gnCurrentIndex][2]); // change display to current channel
 	displayOsdBanner(true);	//Show epg for selected channel.
 }
@@ -459,19 +397,6 @@ function previousChannel()
     if (gnCurrentGroup != gnPreviousGroup)
 		filterByGroup(gnPreviousGroup); // refilter
 	setChannel(gnPreviousIndex,gnPreviousGroup);
-}
-
-// Gets last channel before standby
-function lastChannel()
-{
-	if (SAGEM_JS_Get("CURRENT_CHANNEL"))
-	{
-		gnCurrentIndex = parseInt(SAGEM_JS_Get("CURRENT_CHANNEL"));
-	}
-	else
-	{
-		gnCurrentIndex = 0;
-	}
 }
 
 // Key input handler.
@@ -515,10 +440,7 @@ function stopTimer(id)
 
 // Remote controll =================================
 function keyAction(e)
-{
-	if (gbLoading)
-		return(0);
-   
+{  
 	k=typeof(e.which)=='undefined'?e.keyCode:e.which; 
 	switch (k)
 	{
@@ -696,4 +618,40 @@ function test()
 }
 //==================================================
 
+// keys 
+KEY_0=536870922;
+KEY_1=536870923;
+KEY_2=536870924;
+KEY_3=536870925;
+KEY_4=536870926;
+KEY_5=536870927;
+KEY_6=536870928;
+KEY_7=536870929;
+KEY_8=536870930;
+KEY_9=536870931;
+
+KEY_CHUP=0x40000013;
+KEY_CHDOWN=0x40000012;
+KEY_OK=0x40000004;
+KEY_RED=0x40000084;
+KEY_GREEN=0x40000085;
+KEY_YELLOW=0x40000086;
+KEY_BLUE=0x40000087;
+KEY_UP=0x4000000E;
+KEY_DOWN=0x4000000F;
+KEY_LEFT=0x40000010;
+KEY_RIGHT=0x40000011;
+KEY_MENU=0x4000000A;
+KEY_REFRESH=0x4000008A;
+KEY_RETOUR=0x4000008A;
+KEY_PLAY=0x40000100;
+KEY_IDENT=0x40000083;
+KEY_VOLUP=0x30000001;
+KEY_VOLDOWN=0x30000002;
+KEY_REW=0x40000105;
+KEY_FWD=0x40000104;
+KEY_MUTE=0x30000003;
+KEY_POWER=0x30000000;
+KEY_QUIT=0x40000082;
+KEY_TV=0x40000097;
 
