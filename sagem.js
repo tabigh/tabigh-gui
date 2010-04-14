@@ -33,10 +33,11 @@ var gaPlaylistFiltered = new Array();	 // array of filtered channelInfo arrays
 var gaGroups = new Array();		// array of unique groups array (0=index,1=group name) 
 var gaCurrentEpg = new Array();	// epg data for all channels (Currently only Siol ISP is supported.)
 
-var gnCurrentItemGroup = -1;	// currrent selected group index, -1=all
-var gnCurrentGroup = gnCurrentItemGroup;	// current group index (playing)
-var gnCurrentItemIndex = 0;		// index of a current selected item in a groupbox
-var gnCurrentIndex = 0; // index of a current playing item
+var gnCurrentIndex = 0; // index of a current playing channel
+var gnCurrentGroup = -1;	// current group index (playing)
+var gnCurrentItemIndex = 0;	// index of a selected item in a channel table
+var gnCurrentItemGroup = gnCurrentGroup;	// selected group in channel table
+
 var gnPreviousIndex = 0;  // index of a previous playing item
 var gnPreviousGroup= -1;	// index of a previous group
 
@@ -50,6 +51,8 @@ var gnTmGroupBoxHide = 0;
 var gnTmOsdBannerHide = 0;
 var gnTmNumpad = 0;
 
+var gbLoading = true;
+
 gnEpgDownloadInterval = 5 * 60 * 1000; // Download epg on every 5 minutes.
 
 function init()
@@ -59,25 +62,29 @@ function init()
 	sagemSetDimming();
 	sagemKillMedia();
 	maxLetters();
-	downloadCurrentEpg();
 	loadPlaylistHandler(la);
+	downloadCurrentEpg();
+	setInterval(downloadCurrentEpg,gnEpgDownloadInterval);
 }
 
 // LoadPlaylist handler
 function loadPlaylistHandler(ar)
 {
 	gaPlaylist = ar;
-	gaPlaylistFiltered = gaPlaylist;
 	getUniqueGroups();
-	filterByGroup(-1);
-	
-	// set current channel to last before standby
-	gnCurrentIndex = sagemCurrentChannelGet();
-	
-	//auto start
-	if (gaPlaylistFiltered.length > gnCurrentIndex)	{
-		setChannel(gnCurrentIndex, gnCurrentGroup);
+		
+	// get current channel and group
+	sTemp = sagemCurrentChannelGet();
+	if (sTemp.indexOf(";") != -1){
+		gnCurrentIndex = parseInt(sTemp.split(";")[0]);
+		gnCurrentGroup = parseInt(sTemp.split(";")[1]);
 	}
+	if (gaGroups.length -1 < gnCurrentGroup)
+		gnCurrentGroup=-1;
+	filterByGroup(gnCurrentGroup);	
+	if (gaPlaylistFiltered.length-1 < gnCurrentIndex)
+		gnCurrentIndex=0;
+	setChannel(gnCurrentIndex, gnCurrentGroup, true);
 }
 
 // Calculate maximum number of letters that would fit into channel selection table and osd banner, based on font size and table width. 
@@ -114,32 +121,23 @@ function getUniqueGroups()
 // Populate an array of channelInfo arrays filtered by group name.
 function filterByGroup(nGroupIndex)
 {
+	gnCurrentItemGroup = nGroupIndex; // Update group index in the channel selection table.
+	
 	if (nGroupIndex == -1){
 		// Don't filter, just point to gaPlaylist array.
-		resetGroupFiltering();
+		gaPlaylistFiltered = [] ; // Clear array
+		gaPlaylistFiltered = gaPlaylist; // gaPlaylist holds all channels.
 		return;
 	}
 	
-    gnCurrentItemGroup = nGroupIndex; // Update group index in the channel selection table.
-	var nSize = gaPlaylist.length;
 	var sGroupName = '' ;
-	if (nGroupIndex >= 0)
-		sGroupName = gaGroups[nGroupIndex][1];
-
+	var nSize = gaPlaylist.length;
+	sGroupName = gaGroups[nGroupIndex][1];
 	gaPlaylistFiltered = [];
-
 	for (var i=0; i<nSize; i++){
 		if (gaPlaylist[i][5]==sGroupName)
 			gaPlaylistFiltered.push(new cloneObject(gaPlaylist[i]));
 	}
-}
-
-// This function should not be used directly.
-function resetGroupFiltering()
-{
-	gnCurrentItemGroup = -1; // Reset  group index in the channel selection table.
-	gaPlaylistFiltered = [] ; // Clear array
-	gaPlaylistFiltered = gaPlaylist; // gaPlaylist holds all channels.
 }
 
 // Display or hide channel selection table.
@@ -157,10 +155,9 @@ function displayGroupBox(bDisplay, bRefresh)
 	else{
 		stopTimer(gnTmGroupBoxHide);
 		gbGroupBoxVisible=false;
-
+		gnCurrentItemIndex=gnCurrentIndex; // Revert to the currently playing index
 		if(gnCurrentItemGroup != gnCurrentGroup) // Revert to the group from which the playing channel was selected.
 			filterByGroup(gnCurrentGroup);
-		gnCurrentItemIndex=gnCurrentIndex; // Revert to the currently playing index.
 	}
 	if (bRefresh)
 		drawMainFrame();
@@ -292,21 +289,19 @@ function downloadCurrentEpgHandler(ar)
     gaCurrentEpg= ar;
 }
 
-// Get array of a current and next show for every channel.
+// Get an array of a current and next epg data for every channel.
 function downloadCurrentEpg()
 {
 	var sTempFrame = window.top.epgFrame;
 	var sHtml = '<html><META http-equiv=\"PRAGMA\" content=\"NO-CACHE\"><META name=\"cache-control\" content=\"NO-CACHE\"></head>';
 	sHtml += '<script src=\"'+EPG_SERVER+'?t='+getRTC().getTime()+'\" type=\"text/javascript\"><\/script>';
 	sHtml += '<script language=\"JavaScript\">';
-	sHtml += 'function init(){if(typeof(la) != \"undefined\" && la!=null ){window.top.downloadCurrentEpgHandler(la);}}';
+	sHtml += 'function init(){if(typeof(la) != \"undefined\" && la!=null ){window.top.downloadCurrentEpgHandler(la);} if (window.top.gbLoading){window.top.gbLoading=false; window.top.drawMainFrame();}}';
 	sHtml += '<\/script>';	
-	sHtml += '<body onload=\"init();\" onKeypress=\"javascript:return window.top.keyAction(event);\"></body></html>';
+	sHtml += '<body onload=\"init();\" onKeypress=\"javascript:return window.top.keyAction(event);\" ></body></html>';
 	sTempFrame.document.open();
 	sTempFrame.document.write(sHtml);
 	sTempFrame.document.close();
-
-	setTimeout("downloadCurrentEpg()",gnEpgDownloadInterval);
 }
 
 // Select next/prev channel from GroupBox.
@@ -373,10 +368,10 @@ function chChange(bDirection)
 			nIndex=nSize-1;
 	}
 		
-	setChannel(nIndex,gnCurrentGroup);
+	setChannel(nIndex, gnCurrentGroup, true);
 }
 
-function setChannel(nIndex,nGroup)
+function setChannel(nIndex, nGroup, bRefresh)
 {
 	gnPreviousIndex = gnCurrentIndex; // Update previous index.
 	gnPreviousGroup = gnCurrentGroup; //Update previous group.
@@ -386,9 +381,9 @@ function setChannel(nIndex,nGroup)
 	gnCurrentItemGroup = nGroup; // Set group in channel table.
 	
 	sagemJoinMulticast(gaPlaylistFiltered[nIndex][3], gaPlaylistFiltered[nIndex][4]);
-	sagemCurrentChannelSet(gnCurrentIndex)
+	sagemCurrentChannelSet(nIndex, nGroup);
 	sagemSetDisplay(gaPlaylistFiltered[gnCurrentIndex][2]); // change display to current channel
-	displayOsdBanner(true);	//Show epg for selected channel.
+	displayOsdBanner(true,bRefresh);	//Show epg for selected channel.
 }
 
 // Switch to previous channel
@@ -396,7 +391,7 @@ function previousChannel()
 {
     if (gnCurrentGroup != gnPreviousGroup)
 		filterByGroup(gnPreviousGroup); // refilter
-	setChannel(gnPreviousIndex,gnPreviousGroup);
+	setChannel(gnPreviousIndex, gnPreviousGroup, true);
 }
 
 // Key input handler.
@@ -425,7 +420,7 @@ function chSetNum()
 	for (var i=0; i<nSize; i++)
 	{
 		if (gaPlaylistFiltered[i][2]==nChNum){
-			setChannel(i,-1);
+			setChannel(i, -1, true);
 			break;
 		}
 	}
@@ -529,8 +524,8 @@ function keyAction(e)
 		case KEY_OK:
 		case 113: //Q
 			if (gbGroupBoxVisible) {	// Set selected channel.
-				setChannel(gnCurrentItemIndex,gnCurrentItemGroup);
-				displayGroupBox(false,false);	// Close channel selection table.
+				setChannel(gnCurrentItemIndex,gnCurrentItemGroup,false);	
+				displayGroupBox(false,true);	// Close channel selection table.
 			}
 			else	 
 				displayGroupBox(true);	// Show only group box - no osd banner.

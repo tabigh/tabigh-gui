@@ -85,10 +85,10 @@ function sagemPowerOff()
 	}
 }
 
-function sagemCurrentChannelSet(index)
+function sagemCurrentChannelSet(index, group)
 {
 	if (typeof(sagem) != 'undefined'){
-		SAGEM_JS_Set("CURRENT_CHANNEL", index);
+		SAGEM_JS_Set("CURRENT_CHANNEL", index+";"+group);
 	}
 }
 
@@ -96,10 +96,10 @@ function sagemCurrentChannelGet()
 {
 	if (typeof(sagem) != 'undefined'){
 		if (SAGEM_JS_Get("CURRENT_CHANNEL"))
-			return parseInt(SAGEM_JS_Get("CURRENT_CHANNEL"));
+			return SAGEM_JS_Get("CURRENT_CHANNEL");
 		else
-			return 0;
+			return '';
 	}
 	else
-		return 0;
+		return '';
 }
