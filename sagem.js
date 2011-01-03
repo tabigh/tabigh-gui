@@ -51,6 +51,9 @@ var gnTmGroupBoxHide = 0;
 var gnTmOsdBannerHide = 0;
 var gnTmNumpad = 0;
 
+//
+var gsStreamSubtitleLanguageList = ''; 
+
 var gbLoading = true;
 
 gnEpgDownloadInterval = 5 * 60 * 1000; // Download epg on every 5 minutes.
@@ -379,11 +382,17 @@ function setChannel(nIndex, nGroup, bRefresh)
 	gnCurrentItemIndex = nIndex; //Set index in the channel table.
 	gnCurrentGroup = nGroup; // Set current playing group.
 	gnCurrentItemGroup = nGroup; // Set group in channel table.
+	gsStreamSubtitleLanguageList = ''; //Clear Subtitle List
 	
 	sagemJoinMulticast(gaPlaylistFiltered[nIndex][3], gaPlaylistFiltered[nIndex][4]);
 	sagemCurrentChannelSet(nIndex, nGroup);
 	sagemSetDisplay(gaPlaylistFiltered[gnCurrentIndex][2]); // change display to current channel
 	displayOsdBanner(true,bRefresh);	//Show epg for selected channel.
+	
+	gsStreamSubtitleLanguageList = sagemGetSubtitleList(); // Get available subtitles
+	if (gsStreamSubtitleLanguageList.length>0){
+		sagemSetSubtitle(0); //Set first available subtitle.
+	}
 }
 
 // Switch to previous channel
@@ -536,6 +545,16 @@ function keyAction(e)
 		case 114: //R
 			previousChannel();
 			return(0);
+		case KEY_YELLOW:
+		case 116: //T  TODO: Display available subtitles
+			gsStreamSubtitleLanguageList = sagemGetSubtitleList(); // Update available subtitles
+			if (gsStreamSubtitleLanguageList.length>0){
+				sagemSetSubtitle(0); //Set first available subtitle.
+			}
+			return(0);
+		case KEY_BLUE:
+				sagemSetSubtitle(-1); //Disable subtitles
+			return (0);
 		case KEY_POWER:
 			sagemPowerOff();
 			return(0);

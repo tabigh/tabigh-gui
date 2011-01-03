@@ -103,3 +103,26 @@ function sagemCurrentChannelGet()
 	else
 		return '';
 }
+
+function sagemGetSubtitleList()
+{
+	if (typeof(sagem) != 'undefined'){
+		return SAGEM_JS_Get("SUBTITLE_LIST"); 
+	}
+	else
+		return '';
+}
+
+function sagemSetSubtitle(index)
+{
+	if (typeof(sagem) != 'undefined'){
+		if (index==-1){
+			SAGEM_JS_Set("SUBTITLE_ACTIVATION", "off");
+		}
+		else
+		{
+			SAGEM_JS_Set("SUBTITLE_LANGUAGE", index);
+			SAGEM_JS_Set("SUBTITLE_ACTIVATION", "on");
+		}
+	}
+}
