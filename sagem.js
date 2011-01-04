@@ -21,7 +21,7 @@ http://code.google.com/p/iptv-stb-gui/
 */
 
 // Notes:
-// Browser AntFresco 4.x : XMLHttpRequest not supported, JS 1.3, CSS 1.0, DOM level 0 (No InnerHtml...)
+// Browser AntFresco 4.x : XMLHttpRequest not supported, JS 1.3, CSS 1.0, DOM level 0 
 // Body height: 576px (HD resolutions also).
 // Main overlay frame consist of two table rows: Upper 0-400px, Lower 400-576px.
 
@@ -50,6 +50,8 @@ var gbOsdBannerVisible = false;
 var gnTmGroupBoxHide = 0;
 var gnTmOsdBannerHide = 0;
 var gnTmNumpad = 0;
+var gnCheckForSubsTimer = 0;
+var gnCheckForSubsInterval= 4000 ; // 4 seconds
 
 //
 var gsStreamSubtitleLanguageList = ''; 
@@ -389,9 +391,14 @@ function setChannel(nIndex, nGroup, bRefresh)
 	sagemSetDisplay(gaPlaylistFiltered[gnCurrentIndex][2]); // change display to current channel
 	displayOsdBanner(true,bRefresh);	//Show epg for selected channel.
 	
-	gsStreamSubtitleLanguageList = sagemGetSubtitleList(); // Get available subtitles
-	if (gsStreamSubtitleLanguageList.length>0){
-		sagemSetSubtitle(0); //Set first available subtitle.
+	gnCheckForSubsTimer = setTimeout("setSubtitles(0)",gnCheckForSubsInterval); // Auto select first available subtitle.
+}
+
+function setSubtitles(index)
+{
+	gsStreamSubtitleLanguageList = sagemGetSubtitleList(); // Update available subtitles
+	if (gsStreamSubtitleLanguageList.length>index){
+			sagemSetSubtitle(index);
 	}
 }
 
@@ -547,10 +554,7 @@ function keyAction(e)
 			return(0);
 		case KEY_YELLOW:
 		case 116: //T  TODO: Display available subtitles
-			gsStreamSubtitleLanguageList = sagemGetSubtitleList(); // Update available subtitles
-			if (gsStreamSubtitleLanguageList.length>0){
-				sagemSetSubtitle(0); //Set first available subtitle.
-			}
+			setSubtitles(0);
 			return(0);
 		case KEY_BLUE:
 				sagemSetSubtitle(-1); //Disable subtitles
