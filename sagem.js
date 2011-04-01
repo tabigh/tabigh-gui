@@ -1,4 +1,4 @@
-/*
+﻿/*
 This file is part of iptv-stb-gui.
 
 Copyright (C) 2010

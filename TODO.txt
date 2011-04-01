@@ -1,12 +1,12 @@
-- Popraviti naËin izbire privzetih podnapisov in audio sledi. Podnapisi naj se prikaûejo samo kadar ustrezajo pogoju v nastavitvah npr: default_sub_lang=slv,hrv.
+Ôªø- Popraviti naƒçin izbire privzetih podnapisov in audio sledi. Podnapisi naj se prika≈æejo samo kadar ustrezajo pogoju v nastavitvah npr: default_sub_lang=slv,hrv.
 - Izbira podnapisov in audio sledi med predvajanjem.
 
-Vse potrebne in öe nekatere druge funkcije so zapisane spodaj.
+Vse potrebne in ≈°e nekatere druge funkcije so zapisane spodaj.
 
 Kako poslati popravke in nove funkcije ?
-a) Lahko se pridruûite projektu tako, da iz vaöega gmail naslova na mcasttv@gmail.com poöljete mail z vsebino "Pridruûitev k projektu iptv-stb-gui". Uporablja se Mercurial sistem, priporoËam pa uporabo programa TortoiseHg.
+a) Lahko se pridru≈æite projektu tako, da iz va≈°ega gmail naslova na mcasttv@gmail.com po≈°ljete mail z vsebino "Pridru≈æitev k projektu iptv-stb-gui". Uporablja se Mercurial sistem, priporoƒçam pa uporabo programa TortoiseHg.
 
-b) »e se k projektu ne ûelite pridruûiti, na mcasttv@gmail.com poöljite patch. Patch naj bo narejen za zadnjo verzijo ( https://code.google.com/p/iptv-stb-gui/source/browse ). Pripiöite tudi revizijsko ötevilko originalnih datotek. 
+b) ƒçe se k projektu ne ≈æelite pridru≈æiti, na mcasttv@gmail.com po≈°jite patch. Patch naj bo narejen za zadnjo verzijo ( https://code.google.com/p/iptv-stb-gui/source/browse ). Pripi≈°ite tudi revizijsko ≈°tevilko originalnih datotek. 
 
 
 #==================================================
@@ -149,7 +149,7 @@ function VideoStreamSetFormat(format)
   }
 }
 
-//nastaviö lahko verjetno tudi Set (mono/stereo)
+//nastavi≈° lahko verjetno tudi Set (mono/stereo)
 function GetDefaultSoundType()
 {
   var lsResult = SAGEM_JS_Get("AudioMonoStereo");
