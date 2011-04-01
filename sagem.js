@@ -1,4 +1,4 @@
-﻿/*
+/*
 This file is part of iptv-stb-gui.
 
 Copyright (C) 2010
@@ -45,6 +45,7 @@ var gnPreviousGroup= -1;	// index of a previous group
 var gbGroupBoxVisible = false;
 var gbNumInputVisible = false;
 var gbOsdBannerVisible = false;
+var gbDetailsVisible = false;
 
 // timers
 var gnTmGroupBoxHide = 0;
@@ -67,7 +68,7 @@ function init()
 	sagemSetDimming();
 	sagemKillMedia();
 	maxLetters();
-	loadPlaylistHandler(la);
+	setTimeout('loadPlaylistHandler(la)',500);
 	downloadCurrentEpg();
 	setInterval(downloadCurrentEpg,gnEpgDownloadInterval);
 }
@@ -188,6 +189,22 @@ function displayOsdBanner(bDisplay, bRefresh)
 		drawMainFrame();
 }
 
+function displayDetails(bDisplay, bRefresh)
+{
+	if (bRefresh === undefined)
+		bRefresh=true;
+
+	if(bDisplay){
+		gbDetailsVisible=true;
+	}
+	else{
+		gbDetailsVisible=false;
+	}
+	if (bRefresh)
+		drawMainFrame();
+}
+
+
 // Display or hide numeric input.
 function displayNumpadInput(b)
 {
@@ -217,9 +234,25 @@ function drawMainFrame()
 	//Lower:
 	sHtmlDown += '</td></tr><tr><td valign=\"top\" >';
 	if (gbOsdBannerVisible){
-		getCurrentEpg(); 
-		sHtmlDown += drawOsdBanner() ;
+        if (!gbDetailsVisible)
+        {
+		    getCurrentEpg();
+		    sHtmlDown += drawOsdBanner() ;
+        }
+        else
+        {
+		    stopTimer(gnTmOsdBannerHide);
+	        gbOsdBannerVisible=false;
+        }
+
 	}
+    if (gbDetailsVisible && !gbNumInputVisible)
+    {
+		getCurrentEpg();
+        downloadDetailsEpg();
+//        return;
+    }
+
 	sHtmlDown += '</td></tr></table>';
 	sHtmlDown += gsMainFrameFooter;
 
@@ -237,6 +270,9 @@ function clearMainFrame()
 		displayOsdBanner(false);
 	if (gbNumInputVisible)
 		displayNumpadInput(false);
+	if (gbDetailsVisible)
+		displayDetails(false);
+        
 }
 
 function getCurrentEpg()
@@ -250,6 +286,7 @@ function getCurrentEpg()
    
 	// Reset previous values.
 	gsCurrentShow='';
+	gsCurrentShowDetails='';
 	gsCurrentShowDesc = '';
 	gsCurrentProgress ='0';
 	gsNextShow = '';
@@ -274,6 +311,7 @@ function getCurrentEpg()
 		var dtStart = new Date();
 		dtStart.setTime(gaCurrentEpg[i][4]);
 		gsCurrentShow= formatTime(dtStart) + ' ' +  gaCurrentEpg[i][6] ;
+		gsCurrentShowDetails= gaCurrentEpg[i][3];
 		gsCurrentShowDesc = gaCurrentEpg[i][7] ;
 		gsCurrentProgress=Math.max(0,Math.min(100,Math.round((nTimeNow-gaCurrentEpg[i][4])*100/(nLength))))+'' ;
 
@@ -308,6 +346,44 @@ function downloadCurrentEpg()
 	sTempFrame.document.write(sHtml);
 	sTempFrame.document.close();
 }
+
+function downloadDetailsEpgHandler(ar)
+{
+    if (!gbDetailsVisible)
+        return;
+	var sHtmlUp = ''
+	var sTempFrame = window.top.mainFrame;
+	var sHtmlDown = '';
+
+    //Upper:
+	sHtmlUp += gsMainFrameHeader;
+	sHtmlUp += '<table width=\"100%\" cellspacing=\"0\" ><tr><td valign=\"top\" height=400px>';
+    sHtmlDown += drawDetails(ar) ;
+	sHtmlDown += '</td></tr></table>';
+	sHtmlDown += gsMainFrameFooter;
+
+	sTempFrame.document.open();
+	sTempFrame.document.write(sHtmlUp+sHtmlDown);
+	sTempFrame.document.close();
+
+
+}
+
+// Get array of a current and next show for every channel.
+function downloadDetailsEpg()
+{
+	var sTempFrame = window.top.epgFrame;
+	var sHtml = '<html><META http-equiv=\"PRAGMA\" content=\"NO-CACHE\"><?ETA name=\"cache-control\" content=\"NO-CACHE\"></head>';
+	sHtml += '<script src=\"'+EPG_DETAILS+'?details=\'http://www.siol.net/tv-spored.aspx?val='+gsCurrentShowDetails+'\'\" type=\"text/javascript\"><\/script>';
+	sHtml += '<script language=\"JavaScript\">';
+	sHtml += 'function initdetails(){if(typeof(ladetail) != \"undefined\" && ladetail!=null ){window.top.downloadDetailsEpgHandler(ladetail);}}';
+	sHtml += '<\/script>';
+	sHtml += '<body onload=\"initdetails();\" onKeypress=\"javascript:return window.top.keyAction(event);\"></body></html>';
+	sTempFrame.document.open();
+	sTempFrame.document.write(sHtml);
+	sTempFrame.document.close();
+}
+
 
 // Select next/prev channel from GroupBox.
 function chSelChange(bDirection)
@@ -499,10 +575,22 @@ function keyAction(e)
 			return(0);
 		case KEY_UP:
 		case 119:
-			chSelChange(false);	// Open group box / select previous chan
+            if (gbDetailsVisible)
+            {
+                scrollUp('mainFrame','div_details');
+                return(0);
+
+            }
+			chSelChange(false);	// Open gro?p box / select previous chan
 			return(0);
 		case KEY_DOWN:
 		case 115:
+            if (gbDetailsVisible)
+            {
+                scrollDown('mainFrame','div_details');
+                return(0);
+
+            }
 			chSelChange(true);	// Open group box / select next chan.
 			return(0);
 		case KEY_LEFT:
@@ -543,8 +631,21 @@ function keyAction(e)
 				setChannel(gnCurrentItemIndex,gnCurrentItemGroup,false);	
 				displayGroupBox(false,true);	// Close channel selection table.
 			}
-			else	 
-				displayGroupBox(true);	// Show only group box - no osd banner.
+			else
+//				displayGroupBox(true);	// Show only group box - no osd banner.
+				if (gbOsdBannerVisible)	// Toggle osd banner
+                {
+					displayOsdBanner(false);
+                    displayDetails(true);
+                }
+				else
+                if (gbDetailsVisible)
+                {
+                    displayDetails(false);
+					displayOsdBanner(true);
+                }
+                else
+			        displayOsdBanner(true);
 				return(0);
 		case KEY_IDENT:
 			return(0);

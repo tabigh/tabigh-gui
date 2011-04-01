@@ -1,0 +1,189 @@
+- Popraviti naèin izbire privzetih podnapisov in audio sledi. Podnapisi naj se prikažejo samo kadar ustrezajo pogoju v nastavitvah npr: default_sub_lang=slv,hrv.
+- Izbira podnapisov in audio sledi med predvajanjem.
+
+Vse potrebne in še nekatere druge funkcije so zapisane spodaj.
+
+Kako poslati popravke in nove funkcije ?
+a) Lahko se pridružite projektu tako, da iz vašega gmail naslova na mcasttv@gmail.com pošljete mail z vsebino "Pridružitev k projektu iptv-stb-gui". Uporablja se Mercurial sistem, priporoèam pa uporabo programa TortoiseHg.
+
+b) Èe se k projektu ne želite pridružiti, na mcasttv@gmail.com pošljite patch. Patch naj bo narejen za zadnjo verzijo ( https://code.google.com/p/iptv-stb-gui/source/browse ). Pripišite tudi revizijsko številko originalnih datotek. 
+
+
+#==================================================
+
+sagem_js_get 
+SUBTITLE_DEFAULT_LANGUAGE
+SUBTITLE_DEFAULT_ACTIVATION
+AUDIO_LANG_DEFAULT
+
+sagem_js_set 
+SUBTITLE_DEFAULT_LANGUAGE','slv' - to je treba poklicat v init funkciji in privzeti subsi bodo ostali do reseta
+
+SUBTITLE_DEFAULT_ACTIVATION','on/off' in to v init funkciji, da bodo subsi po defaultu on
+
+AUDIO_LANG_DEFAULT,'slv' - to je treba poklicat v init funkciji in privzet avdio bo ostal do reseta
+
+
+function VideoStreamGetAllAudioLanguages()
+{
+  var returnedValue = SAGEM_GetAudioList() ;
+  if (returnedValue.indexOf("session") == -1)
+  {
+    var reReg = new RegExp("[A-Z]{3}","ig");
+    var audioList = "00" ;
+    if (returnedValue.length > 0)
+    {
+      var tab = returnedValue.match(reReg);
+      if (tab != null && tab.length > 0)
+      {
+        if (tab.length < 10)
+          audioList = "0" + tab.length ;
+        else
+          audioList = "" + tab.length ;
+        for ( var i=0 ; i<tab.length ; i++)
+        {
+          audioList = audioList + "," + tab[i] ;
+        }
+        return audioList;
+      }
+      else
+        return -1;
+    }
+    else
+      return "00";
+  }
+  else
+    return -1;
+}
+
+function VideoStreamGetCurrentAudioLanguage()
+{
+  var lsResult = SAGEM_JS_Get("Audio_Lang");
+  if (lsResult == "" || lsResult == "-2")
+  {
+    var lsResultDefault = SAGEM_JS_Get("AUDIO_LANG_DEFAULT");
+    var aSplit = String(lsResultDefault).split(',');
+    var liResult = aSplit[0] *1;
+    if (liResult == 0)
+      return aSplit[1];
+    else
+      return -1;
+  }
+  else
+    return lsResult;
+}
+
+function VideoStreamSetCurrentAudioLanguage(language)
+{
+  if (language != '' && language != null)
+  {
+    var lLanguage = language.toLowerCase();
+    var lsResult = SAGEM_JS_Set("Audio_Lang", lLanguage);
+    if (lsResult.indexOf(lLanguage) != -1 || lsResult == 0)
+      return 0;
+    else
+      return -1;
+  }
+  else
+    return -1;
+}
+
+function VideoStreamGetFormat()
+{
+  var tvFormat = SAGEM_GetTVFormat();
+  if (tvFormat == 1 || tvFormat == 3)
+    return "4/3";
+  else if (tvFormat == 2)
+    return "16/9";
+  else
+    return -1;
+}
+
+function GetDefaultVideoFormat()
+{
+  var tvFormat = SAGEM_JS_Get("DISPLAY_DEFAULT_FORMAT");
+  var aSplit = String(tvFormat).split(',');
+  var liResult = aSplit[0] *1;
+  if (liResult == 0)
+  {
+    return aSplit[1];
+  }
+  else
+    return -1;
+}
+
+//spremeni default format slike
+function SetDefaultVideoFormat(format)
+{
+  var sFormat = "";
+  if (format == "16/9" || format == "16:9")
+    sFormat = "16/9";
+  else if (format == "4/3" || format == "4:3")
+    sFormat = "4/3";
+  else
+    return -1;
+
+  var ret = SAGEM_JS_Set("DISPLAY_DEFAULT_FORMAT", sFormat);
+  return ret ;
+}
+
+//spremeni format slike video streama - ni testirano
+function VideoStreamSetFormat(format)
+{
+  var sLocation = "tv://tvsize.";
+  if (format != null && format != '')
+  {
+    var sSize = "4";
+    var sFormat = String(format);
+    if (sFormat.indexOf("16/9") >= 0 || sFormat.indexOf("16:9") >= 0)
+    {
+      sSize = "16";
+    }
+    sLocation += sSize;
+    document.location.href = sLocation;     
+    return 0;
+  }
+  else
+  {
+    return -1;
+  }
+}
+
+//nastaviš lahko verjetno tudi Set (mono/stereo)
+function GetDefaultSoundType()
+{
+  var lsResult = SAGEM_JS_Get("AudioMonoStereo");
+  if (lsResult == "mono")
+    return "M";
+  else if (lsResult == "stereo")
+    return "S";
+  else
+    return -1;
+}
+
+function CacheReset()
+{
+  var returnedValue = SAGEM_JS_Set("BRW_FLUSH_CACHE");
+  return returnedValue;
+}
+
+//teletext subtitles
+function SetDefaultVBISubtitleDisable()
+{
+  var lsResult = SAGEM_JS_Set("Subtitle_VBI", "off");
+  if (lsResult == "off")
+    return 0;
+  else
+    return -1;
+}
+
+function SetDefaultVBISubtitleEnable()
+{
+  var lsResult = SAGEM_JS_Set("Subtitle_VBI", "on");
+  if (lsResult == "on")
+    return 0;
+  else
+    return -1;
+}
+
+#====================================================

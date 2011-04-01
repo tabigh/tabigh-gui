@@ -22,6 +22,8 @@ http://code.google.com/p/iptv-stb-gui/
 
 // Epg server (Siol internal network)
 EPG_SERVER = 'http://10.253.3.129/EpgThales/FetchEpg.aspx';
+EPG_DETAILS = 'http://0.0.0.0/simplicityEpg.php';  //<-- change to ip of your web server computer
+EPG_PIC = 'http://0.0.0.0/simplicityEpg.php?picture='; //<-- change to ip of your web server computer
 
 TIME_OFFSET = 7200; // Siol: zimski cas: 3600, poletni 7200
 
@@ -37,7 +39,7 @@ gnGroupBoxFontSize = 100;
 // Osd banner font size (epg )[%] (default 100)
 gnOsdBannerFontSize = 100;
 // overscan correction left [px] (default 46)
-gnMarginLeft = 46;
+gnMarginLeft = 30;
 // overscan correction top [px] (default 30)
 gnMarginTop = 30;
 // =========================================
@@ -55,7 +57,7 @@ gnTmNumpadInterval = 2000;
 // Group table transparency (0-100)[%] (default 50)
 gnGroupBoxAlpha = 50; 
 // Banner header transparency (0-100)[%] (default 94)
-gnOsdBannerHeaderAlpha = 94; 
+gnOsdBannerHeaderAlpha = 78; 
 // Banner epg transparency (0-100)[%] (default 78)
 gnOsdBannerEpgAlpha = 78; 
 //==========================================
@@ -73,9 +75,9 @@ gsGroupBoxRightColor = 'white' ;
 // Group box selected item color (default #808080)
 gsGroubBoxSelectorColor = '#808080';
 // Banner header background color (default #808080)
-gsOsdBannerHeadBackColor = '#808080';
+gsOsdBannerHeadBackColor = '#7d5ab1';
 // Banner epg background color (default #0000c4)
-gsOsdBannerEpgBackColor = '#0000c4';
+gsOsdBannerEpgBackColor = '#004ec4';
 // Banner: chan. number font color (default #ffff00)
 gsOsdBannerNumColor = '#ffff00'; 
 // Banner: chan. name font color (default white)

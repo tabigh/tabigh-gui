@@ -22,10 +22,12 @@ http://code.google.com/p/iptv-stb-gui/
 
 // Current playing show name (groupbox not visible) or selected item show name (groupbox visible)
 var gsCurrentShow='';
+var gsCurrentShowDetails='';
 var gsCurrentShowDesc='';
 var gsNextShow='';
 var gsNextShowDesc='';
 var gsCurrentProgress='0';
+var scrollHeight=200;
 
 // numpad input
 var gsNumpad = '';
@@ -72,6 +74,25 @@ gsMainFrameHeader =  gsHeaderCommon +
 					'  font-size:'+gnOsdBannerFontSize+'%;'+
 					'  width:'+gnOsdBannerWidth +'%;'+
 					'  table-layout:fixed;}'+
+					'.osd_details{'+
+                    '  background-color:black;'+
+					'  border-width:0px;'+
+					'  padding:5px;'+
+					'  font-size:'+gnOsdBannerFontSize+'%;'+
+					'  width:'+gnOsdBannerWidth +'%;'+
+					'  table-layout:fixed;}'+
+					'.osd_det_img{'+
+                    '  border-width: 2px;'+
+                    '  border-color:yellow;'+
+					'  border-style:solid;}'+
+
+					'.div_details{'+
+					'  height:100px;'+
+					'  border-style:solid;'+
+					'  border-width:0px;'+
+					'  border-color:red;'+
+                    '  overflow:auto;}'+
+                    
 					'.r0c0{'+
 					'  color: '+gsOsdBannerNumColor+';'+
 					'  background-color: '+gsOsdBannerHeadBackColor+gsOsdBannerHeaderAlpha+';'+
@@ -89,7 +110,7 @@ gsMainFrameHeader =  gsHeaderCommon +
 					'  color: '+gsOsdBannerEpgColor+';'+
 					'  background-color: '+gsOsdBannerEpgBackColor+gsOsdBannerEpgAlpha+';'+
 					'  font-weight:bold;}'+
-					'.r2c01{background-color: transparent; font-size: 4px; }'+
+					'.r2c01{background-color: transparent; font-size: 6px; padding:0}'+
 					'.desc{font-weight:normal;'+
 					'  color: '+gsOsdBannerEpgDescColor+';}'+
 					'  </style></head>'+
@@ -103,7 +124,7 @@ gsNumInputHeader = gsHeaderCommon +
 					'  background-color: '+gsNumericInputBackColor+';'+
 					'  font-family:Arial;'+
 					'  font-size: 160%;'+
-					'  font-weight: bold ;}'+
+					'  font-weight: normal;}'+
 					'  </style></head><body onKeypress=\"javascript:return window.top.keyAction(event);\" leftmargin='+gnMarginLeft+ 'px topmargin='+gnMarginTop+'px >';
 					
 gsNumInputFooter =  gsMainFrameFooter;
@@ -184,7 +205,7 @@ function drawOsdBanner()
 			sNextShowDesc = gsNextShowDesc.trunc(Math.max(0,gnOsdBanEpgMaxLetters - nNextShowLen ));
 		}
 		sTable+='<td class="r13c01" colspan="3">'+sCurShow+'<span class="desc"> '+sCurShowDesc+'</span></td></tr><tr>'+
-				'<td class="r2c01" colspan="3"><img src="progress.gif" width='+ gsCurrentProgress +'% height=4px></td></tr><tr>'+
+				'<td class="r2c01" colspan="3"><img src="progress3.jpg" width='+ gsCurrentProgress +'% height=8px></td></tr><tr>'+
 				'<td class="r13c01" colspan="3">'+sNextShow+'<span class="desc"> '+sNextShowDesc+'</span></td></tr></table>';
 	}
 	else
@@ -192,6 +213,82 @@ function drawOsdBanner()
 
 	return sTable;
 }
+/*
+function drawDetails(ar)
+{
+
+	if (ar)
+    {
+	var sTable = '<table align="center" class="osd_details" ><tr>'+
+				'<td class="r0c0">'+ar[0]+'</td>'+
+				'<td class="r0c1">'+ar[1]+'</td>'+
+				'<td class="r0c2"><img src=\"'+EPG_PIC+'\''+ar[9]+'\'\"></td></tr><tr>';
+//				'<td class="r0c2"></td></tr><tr>';
+
+		sTable+='<tr><td colspan="3" class="r0c1">'+ar[2]+'</td></tr>';
+	}
+	else
+		sTable += '</table>';
+
+	return sTable;
+}
+*/
+
+function drawDetails(ar)
+{
+
+	if (ar)
+    {
+        if (ar.length < 2)
+        {
+            var sTable = '<table align="center" class="osd_details"><tr>';
+                sTable+= '<td class="r0c0"><br>Ni podatka<br><br></td>';
+		        sTable+= '</tr></table></div>';
+
+            return sTable;
+        }
+
+	    var sTable = '<div id="div_details" class="div_details" height="200"><table align="center" class="osd_details"><tr>'+
+				'<td class="r0c0" align="left">'+
+                '<table class="osd_det_img" align="right" cellpadding="3" cellspacing="0">'+
+                '<tr><td align="center" valign="top">'+
+                '<img src="'+EPG_PIC+'\''+ar[9]+'\'\">'+
+                '</td></tr></table>'+
+                '<span class="r0c1">('+gaPlaylistFiltered[gnCurrentItemIndex][2]+') '+ar[3]+ar[4]+', '+ar[10]+'</span><br><br>'+
+                ar[0]+'<br><br>'+
+				'<span class="r0c1">'+ar[1]+'</span><br><br>'+
+                '<span class="r0c2">'+ar[2]+'</span>';
+        if (ar[5]!="") //igrajo
+        {
+            sTable+='<br><br><span class="r0c2">'+ar[6]+'</span><br><span class="r0c0">'+ar[5]+'</span>';
+
+        }
+        if (ar[7]!="") //režija
+        {
+            sTable+='<br><br><span class="r0c2">'+ar[8]+'</span><br><span class="r0c0">'+ar[7]+'</span>';
+
+        }
+        sTable+='<br><br></td>';
+
+		sTable+='</tr>';
+	}
+	else
+		sTable += '</table></div>';
+
+	return sTable;
+}
+
+function scrollUp(frame,which){
+// SET THE SCROLL TOP
+    el = document.getElementById(frame).contentWindow.document.getElementById(which);
+    el.scrollTop = el.scrollTop - scrollHeight;
+}
+function scrollDown(frame,which){
+// SET THE SCROLL TOP
+    el = document.getElementById(frame).contentWindow.document.getElementById(which);
+    el.scrollTop = el.scrollTop + scrollHeight;
+}
+
 
 //==================================================
 // Helper functions ================================
